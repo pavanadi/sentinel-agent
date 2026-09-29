@@ -1,1 +1,1 @@
-"""Sentinel: federated cross-border cyclone early warning AgentApp."""
+"""Sentinel: federated cross-border flood early warning AgentApp."""

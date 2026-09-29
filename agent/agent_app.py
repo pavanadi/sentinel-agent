@@ -1,28 +1,42 @@
-"""Sentinel: federated cross-border cyclone early warning.
+"""Sentinel: federated cross-border flood early warning.
 
-Three nation-local agents (Doria, Kessa, Averlyn) each analyze only their own
-country's sensor data and emit an anonymized risk signal -- no raw sensor
-data crosses a border. A coordinator agent then reasons ONLY over those three
-signals (it never sees raw data from any nation) to predict which nation
-will be hit hardest next and recommend a coordinated response.
+Five upstream nations each monitor one river that drains into the delta
+nation Calderune. Each nation's agent reads only its own gauge data and shares
+one derived signal: its flow, projected to the day it reaches the delta.
+Rainfall, soil moisture, gauge levels and history never leave the nation.
+The coordinator sums those projections and warns Calderune -- even though no
+upstream nation's own data ever crosses its local alert threshold.
 """
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import re
+from collections import defaultdict
 from typing import Any
 
 from flwr.agentapp import AgentApp, AgentSession
 from flwr.app import Context
 from openai import OpenAI
 
-from agent.data import LOCAL_SENSOR_DATA, NATION_ORDER, REGION_GEOGRAPHY
+from agent.data import (
+    BASINS,
+    DEFAULT_AS_OF,
+    DOWNSTREAM,
+    DOWNSTREAM_DANGER_M3S,
+    NATION_ORDER,
+    REGION_GEOGRAPHY,
+    load_readings,
+)
 
 MODEL = "openai/gpt-5.6-sol"
-DEFAULT_PROMPT = "Brief me on current conditions."
+DEFAULT_PROMPT = "Brief me on current river conditions."
+NATION_TASK = "Report on {country}'s own river conditions as of {as_of}."
 SECTION_BREAK = "\n\n---\n\n"
+LOCAL_WINDOW_DAYS = 7
+AS_OF_DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
 app = AgentApp()
 
@@ -70,83 +84,133 @@ def _extract_json_block(text: str) -> dict[str, Any]:
     return json.loads(match.group(1))
 
 
-NATION_INSTRUCTIONS = """You are the National Meteorological Agent for {country}.
+def _as_of(prompt: str) -> str:
+    match = AS_OF_DATE.search(prompt)
+    return match.group(1) if match else DEFAULT_AS_OF
 
-You may ONLY use the sensor data for {country} given below. You have no
-access to any other nation's sensor data, and you must not guess, assume, or
-mention what conditions might be like elsewhere -- only report on {country}.
 
-Sensor data for {country}:
+def _projected_inflow(nation: str, readings: list[dict[str, Any]], as_of: str) -> dict[str, float]:
+    """The only number a nation shares: flow already in the river, keyed by delta arrival date."""
+    shift = dt.timedelta(days=BASINS[nation]["travel_days"])
+    projected = {}
+    for row in readings:
+        arrival = (dt.date.fromisoformat(row["date"]) + shift).isoformat()
+        if arrival > as_of:
+            projected[arrival] = row["discharge_m3s"]
+    return projected
+
+
+def _combine(signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Sum projected inflow by arrival date. Dates missing a nation are lower bounds."""
+    by_date: dict[str, dict[str, float]] = defaultdict(dict)
+    for signal in signals:
+        for date, flow in signal["projected_inflow_m3s"].items():
+            by_date[date][signal["country"]] = flow
+    rows = []
+    for date in sorted(by_date):
+        shares = by_date[date]
+        total = sum(shares.values())
+        rows.append(
+            {
+                "arrival_date": date,
+                "combined_inflow_m3s": round(total),
+                "nations_reporting": len(shares),
+                "complete": len(shares) == len(signals),
+                "above_danger": total > DOWNSTREAM_DANGER_M3S,
+                "by_nation_m3s": {
+                    c: round(f) for c, f in sorted(shares.items(), key=lambda kv: -kv[1])
+                },
+            }
+        )
+    return rows
+
+
+NATION_INSTRUCTIONS = """You are the National Hydrology Agent for {country}, which
+monitors the {river} river.
+
+You may ONLY use {country}'s own gauge readings below (the last {days} days up
+to {as_of}). You have no access to any other nation's data. Do not guess or
+mention conditions elsewhere, including downstream.
+
+{country} readings:
 {data}
 
-Write a short (3-5 sentence) analysis for a regional briefing, starting with
-the bolded line "**{country} -- National Meteorological Agent**". Then, on a
-new line, emit ONLY this JSON object in a fenced ```json code block as the
-very last thing in your response (no text after it):
+Write a short (3-4 sentence) local report, starting with the bolded line
+"**{country} -- National Hydrology Agent ({river} river)**". Judge severity
+against {country}'s own local danger level only. Then emit ONLY this JSON
+object in a fenced ```json code block as the very last thing in your response
+(no text after it):
 
 {{
   "country": "{country}",
-  "severity": <float 0-1, this nation's own current risk level>,
+  "severity": <float 0-1, {country}'s own local flood risk>,
   "anomaly_type": "<one short phrase>",
-  "trend_vector": "<one short phrase describing how this nation's readings are changing over time>",
-  "storm_motion": "<direction any storm system is moving relative to {country}, only if {country}'s own data shows it, else 'not observed'>",
+  "trend_vector": "<one short phrase describing how {country}'s readings are changing>",
   "confidence": <float 0-1>,
   "key_evidence": ["<short bullet>", "<short bullet>"]
 }}
 """
 
-COORDINATOR_INSTRUCTIONS = """You are the Regional Early Warning Coordinator.
+COORDINATOR_INSTRUCTIONS = """You are the Regional Flood Early Warning Coordinator
+for the {downstream} delta. Today is {as_of}.
 
-You have NEVER seen raw sensor data from any nation -- national governments do
-not share that. You have only the three independent risk signals below, each
-produced by that nation's own analyst reasoning over data that never left
-their country.
+You have NEVER seen any nation's gauge data. Each upstream nation shared only
+its own local assessment and the flow already in its river, projected to the
+date it will reach the delta.
 
-Public geography (from any map, not sensor data):
+Public hydrology:
 {geography}
 
-Signals:
+Nation signals:
 {signals}
 
-Using only these signals and the public geography, write a regional briefing
-that:
-1. Projects the storm's track from the storm_motion and trend signals and the
-   order of the nations along the coast, and considers what conditions the
-   system will meet further along that track.
-2. States which nation is likely to be hit hardest -- not necessarily the one
-   with the highest current severity, nor simply the next one reached.
-3. Explains the cross-border pattern that no single nation's own signal
-   reveals on its own.
-4. Gives one concrete, coordinated recommendation for the nations to act on
-   together.
+Combined projected delta inflow (computed exactly; do not recompute). Dates
+with fewer than {n} nations reporting are lower bounds -- more water will
+still arrive:
+{combined}
 
-Start with the bolded line "**Regional Early Warning Coordinator**". Be
-concise: at most 6 sentences total.
+Write a regional briefing that:
+1. States clearly whether {downstream} needs a flood warning, for which
+   date(s), and how much lead time that gives.
+2. Explains why no single nation could have seen this from its own data.
+3. Names which nations' water contributes most on the warning date(s), using
+   by_nation_m3s.
+4. Gives one concrete, coordinated recommendation.
+
+Start with the bolded line "**Regional Flood Early Warning Coordinator**".
+Be concise: at most 7 sentences. Quote the combined inflow figures above
+exactly; do not invent numbers.
 """
 
 
 @app.main()
 def main(agent: AgentSession, context: Context) -> None:
-    """Run the three nation agents, then the coordinator, over one prompt."""
+    """Run the five nation agents, then the coordinator, over one prompt."""
     client = OpenAI(
         base_url=os.environ["FLWR_RUNTIME_BASE_URL"],
         api_key=os.environ["FLWR_RUNTIME_API_KEY"],
         max_retries=0,
     )
     prompt = agent.prompt or DEFAULT_PROMPT
+    as_of = _as_of(prompt)
 
     signals: list[dict[str, Any]] = []
     for country in NATION_ORDER:
+        readings = [r for r in load_readings(country) if r["date"] <= as_of]
+        window = readings[-LOCAL_WINDOW_DAYS:]
         instructions = NATION_INSTRUCTIONS.format(
             country=country,
-            data=json.dumps(LOCAL_SENSOR_DATA[country], indent=2),
+            river=BASINS[country]["river"],
+            days=LOCAL_WINDOW_DAYS,
+            as_of=as_of,
+            data=json.dumps(window, indent=1),
         )
         try:
             text = _stream_and_emit(
                 client,
                 agent,
                 instructions=instructions,
-                input_text=prompt,
+                input_text=NATION_TASK.format(country=country, as_of=as_of),
                 final=False,
             )
             signal = _extract_json_block(text)
@@ -156,20 +220,29 @@ def main(agent: AgentSession, context: Context) -> None:
                 "severity": 0.5,
                 "anomaly_type": "unparsed",
                 "trend_vector": "unknown",
-                "storm_motion": "not observed",
                 "confidence": 0.0,
                 "key_evidence": [f"agent output could not be parsed: {exc}"],
             }
+        latest = window[-1]
+        signal["local_alert"] = int(latest["local_alert"])
+        signal["pct_of_local_danger"] = latest["pct_of_local_danger"]
+        signal["projected_inflow_m3s"] = _projected_inflow(country, window, as_of)
         signals.append(signal)
         print(f"[{country}] {signal}")
         _emit_text(agent, SECTION_BREAK)
 
+    combined = _combine(signals)
+    print(f"[combined] {combined}")
     coordinator_text = _stream_and_emit(
         client,
         agent,
         instructions=COORDINATOR_INSTRUCTIONS.format(
+            downstream=DOWNSTREAM,
+            as_of=as_of,
             geography=REGION_GEOGRAPHY,
-            signals=json.dumps(signals, indent=2),
+            signals=json.dumps(signals, indent=1),
+            n=len(signals),
+            combined=json.dumps(combined, indent=1),
         ),
         input_text=prompt,
         final=True,

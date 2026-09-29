@@ -1,42 +1,44 @@
-"""Synthetic, per-nation sensor data.
+"""River-basin data for the Sentinel demo.
 
-Each nation's readings are deliberately visible ONLY to that nation's own
-agent call in agent_app.py. No function here combines data across nations —
-that boundary is the point of the demo.
+Five fictional upstream nations each monitor one river that drains into the
+downstream delta nation, Calderune. Readings in agent/basins/*.json are each
+nation's PRIVATE gauge data (200 daily rows); only that nation's agent may read
+them. Derived from the team's SuperNode dataset with names changed and
+coordinates removed.
+
+Travel times, danger thresholds and the map are public hydrology, so the
+coordinator may use them.
 """
 
-NATION_ORDER = ["Doria", "Kessa", "Averlyn"]
+from __future__ import annotations
 
-# Public knowledge (on any map), so the coordinator may see it. Not sensor data.
+import json
+from pathlib import Path
+
+BASIN_DIR = Path(__file__).resolve().parent / "basins"
+
+DOWNSTREAM = "Calderune"
+DOWNSTREAM_DANGER_M3S = 44000
+DEFAULT_AS_OF = "2026-07-03"
+
+# Public: river, and days for water to reach the Calderune delta.
+BASINS = {
+    "Kaldor": {"river": "Upper Kal", "file": "kaldor.json", "travel_hours": 96, "travel_days": 4},
+    "Torvia": {"river": "Tor", "file": "torvia.json", "travel_hours": 60, "travel_days": 2},
+    "Brenholt": {"river": "Bren", "file": "brenholt.json", "travel_hours": 48, "travel_days": 2},
+    "Veyra": {"river": "Veyr", "file": "veyra.json", "travel_hours": 36, "travel_days": 2},
+    "Ostmark": {"river": "Ost", "file": "ostmark.json", "travel_hours": 30, "travel_days": 1},
+}
+NATION_ORDER = list(BASINS)
+
 REGION_GEOGRAPHY = (
-    "Doria, Kessa and Averlyn lie in that order from east to west along one "
-    "continuous coastline. Kessa borders both Doria and Averlyn."
+    f"Kaldor, Torvia, Brenholt, Veyra and Ostmark each lie upstream of {DOWNSTREAM}. "
+    f"Their rivers (Upper Kal, Tor, Bren, Veyr, Ost) all converge in the {DOWNSTREAM} delta. "
+    "Water takes about 4, 2.5, 2, 1.5 and 1.25 days respectively to reach the delta. "
+    f"The {DOWNSTREAM} delta floods when combined inflow exceeds {DOWNSTREAM_DANGER_M3S:,} m3/s."
 )
 
-# Storm is currently over Doria (moving west, toward Kessa then Averlyn).
-LOCAL_SENSOR_DATA = {
-    "Doria": {
-        "readings": [
-            {"t": "T-12h", "pressure_hpa": 985, "wind_kmh": 140, "sea_surface_temp_c": 29.4, "rainfall_mm_24h": 210},
-            {"t": "T-6h", "pressure_hpa": 978, "wind_kmh": 155, "sea_surface_temp_c": 29.1, "rainfall_mm_24h": 260},
-            {"t": "T0", "pressure_hpa": 982, "wind_kmh": 145, "sea_surface_temp_c": 28.7, "rainfall_mm_24h": 190},
-        ],
-        "notes": "Landfall occurred near the capital 4 hours ago. Pressure has begun rising and winds easing as the system moves offshore to the west.",
-    },
-    "Kessa": {
-        "readings": [
-            {"t": "T-12h", "pressure_hpa": 1006, "wind_kmh": 35, "sea_surface_temp_c": 28.2, "rainfall_mm_24h": 5},
-            {"t": "T-6h", "pressure_hpa": 1001, "wind_kmh": 55, "sea_surface_temp_c": 28.4, "rainfall_mm_24h": 20},
-            {"t": "T0", "pressure_hpa": 994, "wind_kmh": 80, "sea_surface_temp_c": 28.6, "rainfall_mm_24h": 45},
-        ],
-        "notes": "Pressure falling steadily and wind speed rising over the last 12 hours. No landfall yet. Coastal fishing fleets have been advised to return to harbor.",
-    },
-    "Averlyn": {
-        "readings": [
-            {"t": "T-12h", "pressure_hpa": 1012, "wind_kmh": 18, "sea_surface_temp_c": 30.1, "rainfall_mm_24h": 0},
-            {"t": "T-6h", "pressure_hpa": 1011, "wind_kmh": 20, "sea_surface_temp_c": 30.6, "rainfall_mm_24h": 0},
-            {"t": "T0", "pressure_hpa": 1010, "wind_kmh": 22, "sea_surface_temp_c": 31.2, "rainfall_mm_24h": 0},
-        ],
-        "notes": "Sky clear, seas calm. The one unusual reading is sea-surface temperature, which is well above seasonal average and has been rising for three straight readings.",
-    },
-}
+
+def load_readings(nation: str) -> list[dict[str, float | str]]:
+    """Load one nation's private daily readings."""
+    return json.loads((BASIN_DIR / BASINS[nation]["file"]).read_text())

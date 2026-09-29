@@ -1,14 +1,21 @@
-# Sentinel — Federated Cross-Border Cyclone Early Warning
+# Sentinel — Federated Cross-Border Flood Early Warning
 
-Three fictional coastal nations (Doria, Kessa, Averlyn) sit along a cyclone's
-path. Each keeps its raw meteorological sensor data private. Each nation's
-agent analyzes only its own data and emits an anonymized risk signal — no raw
-data crosses a border. A coordinator agent reasons only over those three
-signals (never raw data) to predict which nation will be hit hardest next and
-recommends a coordinated response.
+Five fictional upstream nations (Kaldor, Torvia, Brenholt, Veyra, Ostmark)
+each monitor one river, and all five rivers converge in the delta nation of
+Calderune. Each nation keeps its gauge data private: rainfall, soil moisture,
+river levels and history never leave the country. Each nation's agent reports
+on its own river and shares exactly one derived number: the flow already in
+its river, projected to the day it reaches the delta. A coordinator agent sums
+those projections and warns Calderune.
 
-No single nation's own signal predicts the outcome — only the federated
-combination does.
+Every upstream nation's own data stays below its local danger level
+(`local_alert = 0` on every one of 200 days), yet their combined flow floods
+the delta on 46 of those days. No single nation's data shows the flood; only
+the federated combination does.
+
+Try it: the default briefing is as of 2026-07-03, and the coordinator warns of a
+flood on 2026-07-04 (44,475 m³/s against a 44,000 m³/s threshold). To brief as
+of another date, name it in the prompt, e.g. "Brief me as of 2026-08-27".
 
 ## Why this matters right now
 
@@ -26,7 +33,7 @@ is feared to burst again.
 - [Al Jazeera: Why Nepal faces another flood threat from a new lake on China border](https://www.aljazeera.com/news/2026/8/28/is-nepal-facing-another-devastating-flood-from-a-new-lake)
 - [Stimson Center: Investigating an Emerging Climate Hazard — Transboundary Glacial Floods on the China-Nepal Border](https://www.stimson.org/2025/investigating-an-emerging-climate-hazard-transboundary-glacial-floods-on-the-china-nepal-border/)
 
-Sentinel's demo scenario is deliberately fictional (Doria/Kessa/Averlyn) — we
+Sentinel's demo scenario is deliberately fictional (Kaldor, Torvia, Brenholt, Veyra, Ostmark and Calderune) — we
 are not asserting claims about the real, still-unfolding Nepal-Tibet situation
 or the countries involved. The fictional scenario exists so we can show the
 mechanism (private local analysis -> anonymized signal sharing -> a
@@ -69,7 +76,7 @@ At the chat prompt:
 
 ```text
 /load .
-A tropical cyclone is active in the region. Brief me.
+Brief me on river conditions for the Calderune delta.
 ```
 
 ## Publish to Flower Hub

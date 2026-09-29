@@ -1,58 +1,85 @@
 {
-  "prompt": "A tropical cyclone is active in the region. Brief me.",
+  "prompt": "Brief me on river conditions for the Calderune delta.",
   "nations": [
     {
-      "country": "Doria",
-      "narrative": "Doria remains at severe risk following cyclone landfall near the capital four hours ago, with current winds of 145 km/h and 190 mm of 24-hour rainfall. Conditions are beginning to ease: pressure has risen from 978 to 982 hPa, while winds and rainfall have declined from their T-6h peaks. The system is moving offshore to the west, but damaging winds, flooding, and saturated-ground impacts remain significant.",
+      "country": "Kaldor",
+      "narrative": "As of 2026-07-03, discharge reached 8,557 m³/s, or 77.8% of Kaldor’s local danger level, so flood risk is elevated but remains below the danger threshold. River level rose to 8.38 m as rainfall increased to 111.7 mm and soil moisture reached 80.7%. Discharge has climbed for four consecutive days, although the local alert remains inactive.",
       "signal": {
-        "country": "Doria",
-        "severity": 0.9,
-        "anomaly_type": "severe post-landfall cyclone",
-        "trend_vector": "pressure rising as winds and rainfall ease",
-        "storm_motion": "offshore to the west",
+        "country": "Kaldor",
+        "severity": 0.78,
+        "anomaly_type": "rapid high-flow rise",
+        "trend_vector": "rainfall, river level, and discharge rising",
         "confidence": 0.98,
         "key_evidence": [
-          "Current winds 145 km/h",
-          "Landfall near capital four hours ago"
+          "Discharge is 8557 m3/s, 77.8% of local danger",
+          "River level rose to 8.38 m amid 111.7 mm rainfall"
         ]
       }
     },
     {
-      "country": "Kessa",
-      "narrative": "Kessa’s coastal conditions are deteriorating rapidly, with pressure falling from 1006 to 994 hPa and winds rising from 35 to 80 km/h over 12 hours. Rainfall accumulation has increased from 5 to 45 mm per 24 hours, while sea-surface temperatures remain warm at 28.6°C, indicating a strengthening tropical system. No landfall has occurred, but coastal risk is high, and fishing fleets have been advised to return to harbor.",
+      "country": "Torvia",
+      "narrative": "As of 2026-07-03, Tor river discharge was 6,553 m³/s, or 72.8% of Torvia’s local danger level, with no local alert active. Discharge declined from 6,940 m³/s on July 2, but remained elevated after rising substantially over the week. Record-period rainfall reached 112.8 mm and soil moisture was high at 76.2%, warranting close local monitoring.",
       "signal": {
-        "country": "Kessa",
-        "severity": 0.82,
-        "anomaly_type": "strengthening tropical cyclone conditions",
-        "trend_vector": "pressure falling as winds and rainfall rise",
-        "storm_motion": "not observed",
-        "confidence": 0.95,
+        "country": "Torvia",
+        "severity": 0.73,
+        "anomaly_type": "elevated river flow",
+        "trend_vector": "rainfall rising while discharge eased from its peak",
+        "confidence": 0.94,
         "key_evidence": [
-          "Pressure fell 12 hPa in 12 hours",
-          "Winds rose to 80 km/h and rainfall to 45 mm"
+          "Discharge at 72.8% of local danger level",
+          "Rainfall rose to 112.8 mm with 76.2% soil moisture"
         ]
       }
     },
     {
-      "country": "Averlyn",
-      "narrative": "Averlyn’s observations do not currently show a tropical cyclone or its motion. Sea-surface temperature has risen from 30.1°C to 31.2°C over 12 hours, while pressure has fallen slightly and winds have increased from 18 to 22 km/h. Current conditions remain clear and calm, with no recorded rainfall, but the unusually warm and rising sea temperature warrants close monitoring.",
+      "country": "Brenholt",
+      "narrative": "As of 2026-07-03, discharge was 21,152 m³/s, or 70.5% of Brenholt’s local danger level, with no local alert active. River level and discharge declined from 8.50 m and 23,244 m³/s on 2026-07-02 to 7.65 m and 21,152 m³/s. Conditions remain elevated because daily rainfall reached 111.6 mm and soil moisture remained high at 80.0%.",
       "signal": {
-        "country": "Averlyn",
-        "severity": 0.38,
-        "anomaly_type": "rapidly warming sea surface",
-        "trend_vector": "temperature and winds rising as pressure slowly falls",
-        "storm_motion": "not observed",
-        "confidence": 0.91,
+        "country": "Brenholt",
+        "severity": 0.71,
+        "anomaly_type": "elevated flood risk",
+        "trend_vector": "river flow easing after a recent rise",
+        "confidence": 0.97,
         "key_evidence": [
-          "Sea temperature rose from 30.1°C to 31.2°C in 12 hours",
-          "Pressure eased to 1010 hPa while winds increased to 22 km/h"
+          "Discharge at 70.5% of local danger level",
+          "Heavy rainfall and 80.0% soil moisture"
+        ]
+      }
+    },
+    {
+      "country": "Veyra",
+      "narrative": "As of 2026-07-03, discharge is 3,327 m³/s, or 73.9% of Veyra’s local danger level, with no local alert active. Rainfall reached 118.9 mm and soil moisture rose to 81.6%, indicating elevated runoff potential. River level held at 7.89 m since the previous day, while discharge continued a modest rise.",
+      "signal": {
+        "country": "Veyra",
+        "severity": 0.74,
+        "anomaly_type": "heavy rainfall and elevated flow",
+        "trend_vector": "rainfall, soil moisture, and discharge rising",
+        "confidence": 0.98,
+        "key_evidence": [
+          "Discharge at 73.9% of local danger level",
+          "Rainfall 118.9 mm and soil moisture 81.6%"
+        ]
+      }
+    },
+    {
+      "country": "Ostmark",
+      "narrative": "As of 2026-07-03, discharge reached 4,312 m³/s, or 71.9% of Ostmark’s 6,000 m³/s local danger level; no local alert is active. River level rose to 7.50 m as daily rainfall increased to 103.2 mm and soil moisture reached 82.1%. Conditions show a sustained upward trend and elevated local flood risk, though discharge remains below the local danger threshold.",
+      "signal": {
+        "country": "Ostmark",
+        "severity": 0.72,
+        "anomaly_type": "heavy rainfall and rising river flow",
+        "trend_vector": "rainfall, soil moisture, river level, and discharge rising",
+        "confidence": 0.98,
+        "key_evidence": [
+          "Discharge is 4312 m3/s, 71.9% of the local danger level",
+          "Rainfall reached 103.2 mm and river level rose to 7.50 m"
         ]
       }
     }
   ],
   "coordinator": {
-    "narrative": "The cyclone appears to be tracking west from post-landfall Doria toward Kessa and then Averlyn, with Doria easing as Kessa’s pressure falls and winds and rain intensify. Farther west, Averlyn’s exceptionally warm sea surface and slowly falling pressure could support renewed strengthening. Averlyn is therefore most likely to face the hardest eventual impact, despite its currently lower severity, although Kessa faces the most immediate danger. Together, the signals reveal a westward-moving, potentially re-intensifying system—recovery in Doria, escalation in Kessa, and favorable cyclone conditions developing in Averlyn.",
-    "most_impacted": "Averlyn",
-    "recommendation": "The three governments should activate one coordinated westward warning protocol now: Doria relay timing and impact lessons, while Kessa and Averlyn jointly escalate coastal warnings, evacuations, and emergency staging."
+    "narrative": "Calderune should issue a flood warning for 2026-07-04, when the complete combined inflow is projected at exactly 44475 m3/s, above the 44,000 m3/s threshold and providing about one day of lead time. No single nation could identify this regional threat because each assessed only its own river, all remained below local danger levels with no local alerts, and the flood risk emerges only when the five rivers converge. On the warning date, the largest contribution is from Brenholt (23244 m3/s), followed by Torvia (6940 m3/s), Kaldor (6709 m3/s), Ostmark (4312 m3/s), and Veyra (3270 m3/s). The 2026-07-05 projection is 38510 m3/s, but it is only a lower bound because Ostmark is not yet reporting for that arrival date; later dates are also incomplete and cannot be treated as safe.",
+    "most_impacted": "Calderune",
+    "recommendation": "Calderune should immediately activate its flood-warning protocol for July 4, coordinate protective actions and evacuation readiness in low-lying delta communities, and request updated arrival-date projections from all five upstream nations."
   }
 }

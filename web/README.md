@@ -57,8 +57,8 @@ add `data/real-run.json` and change `DATA_URL` in `app.js`).
 - [ ] Swap placeholder run for a real captured transcript once available
 - [ ] Visual polish pass (spacing, typography, color contrast at a distance —
       test on the venue's projector if possible)
-- [ ] Optional: simple map/arrow motif showing the storm moving Doria -> Kessa
-      -> Averlyn, if time allows
+- [ ] Optional: simple map/arrow motif showing the five rivers converging on
+      Bangladesh, if time allows
 - [ ] Optional stretch: a toggle to pull a live run's events instead of the
       static replay, only if FS-2 exposes a way to read run events and only
       as a fallback-safe addition (replay must still work if this breaks)

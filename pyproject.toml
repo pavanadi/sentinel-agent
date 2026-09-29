@@ -15,10 +15,10 @@ packages = ["agent"]
 
 [tool.flwr.app]
 publisher = "pavanadi"
-display-name = "Sentinel: Federated Cyclone Early Warning"
+display-name = "Sentinel: Federated Flood Early Warning"
 fab-format-version = 1
 flwr-version-target = "1.39.0"
-fab-include = ["agent/**/*.py", "LICENSE"]
+fab-include = ["agent/**/*.py", "agent/basins/*.json", "LICENSE"]
 
 [tool.flwr.app.components]
 agentapp = "agent.agent_app:app"

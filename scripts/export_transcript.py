@@ -3,7 +3,6 @@
 Usage:
     uv run python scripts/export_transcript.py                  # latest run -> web/data/sample-run.json
     uv run python scripts/export_transcript.py runs/run-123.json -o web/data/real-run.json
-    uv run python scripts/export_transcript.py --most-impacted Averlyn   # override the detected verdict
 """
 
 from __future__ import annotations
@@ -17,7 +16,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from agent.data import NATION_ORDER  # noqa: E402
+from agent.data import DOWNSTREAM, NATION_ORDER  # noqa: E402
 
 SECTION_BREAK = "\n\n---\n\n"
 JSON_BLOCK = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
@@ -40,17 +39,7 @@ def parse_nation(section: str) -> dict:
     return {"country": signal["country"], "narrative": narrative, "signal": signal}
 
 
-def detect_most_impacted(sentences: list[str]) -> str:
-    """First nation named in the first sentence that mentions 'hardest'."""
-    for sentence in sentences:
-        if "hardest" in sentence.lower():
-            hits = [(sentence.find(n), n) for n in NATION_ORDER if n in sentence]
-            if hits:
-                return min(hits)[1]
-    raise ValueError("Could not detect the most-impacted nation; pass --most-impacted")
-
-
-def convert(run: dict, most_impacted: str | None) -> dict:
+def convert(run: dict) -> dict:
     text = "".join(
         e["data"].get("delta", "")
         for e in run["events"]
@@ -61,11 +50,12 @@ def convert(run: dict, most_impacted: str | None) -> dict:
         raise ValueError(f"Expected {len(NATION_ORDER) + 1} sections, found {len(sections)}")
 
     nations = [parse_nation(s) for s in sections[:-1]]
-    sentences = SENTENCE_END.split(strip_header(sections[-1]))
+    coordinator_text = strip_header(sections[-1]).replace("**", "")
+    sentences = SENTENCE_END.split(coordinator_text)
     coordinator = {
         "narrative": " ".join(sentences[:-1]),
-        "most_impacted": most_impacted or detect_most_impacted(sentences),
-        "recommendation": sentences[-1],
+        "most_impacted": DOWNSTREAM,
+        "recommendation": re.sub(r"^Recommendation:\s*", "", sentences[-1]),
     }
     return {"prompt": run["prompt"], "nations": nations, "coordinator": coordinator}
 
@@ -74,18 +64,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("run_file", nargs="?", type=Path)
     parser.add_argument("-o", "--output", type=Path, default=REPO_ROOT / "web/data/sample-run.json")
-    parser.add_argument("--most-impacted", choices=NATION_ORDER)
     args = parser.parse_args()
 
     run_file = args.run_file or max((REPO_ROOT / "runs").glob("run-*.json"), key=lambda p: p.stat().st_mtime)
-    transcript = convert(json.loads(run_file.read_text()), args.most_impacted)
+    transcript = convert(json.loads(run_file.read_text()))
     args.output.write_text(json.dumps(transcript, indent=2, ensure_ascii=False) + "\n")
 
     print(f"{run_file.name} -> {args.output}")
     for nation in transcript["nations"]:
-        s = nation["signal"]
-        print(f"  {nation['country']:<8} severity={s['severity']}  motion={s.get('storm_motion')}")
-    print(f"  most_impacted = {transcript['coordinator']['most_impacted']}  (verify this matches the narrative)")
+        print(f"  {nation['country']:<9} severity={nation['signal']['severity']}")
+    print(f"  recommendation: {transcript['coordinator']['recommendation'][:100]}")
 
 
 if __name__ == "__main__":

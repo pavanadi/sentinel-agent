@@ -1,5 +1,8 @@
 {
   "prompt": "Brief me on river conditions for Bangladesh.",
+  "as_of": "2026-07-03",
+  "downstream": "Bangladesh",
+  "threshold_m3s": 44000,
   "nations": [
     {
       "country": "China",
@@ -14,6 +17,17 @@
           "Discharge at 8557 m3/s, 77.8% of local danger",
           "River level rose from 5.99 m to 8.38 m in seven days"
         ]
+      },
+      "river": "Yarlung Tsangpo",
+      "travel_hours": 96,
+      "travel_days": 4,
+      "pct_of_local_danger": 77.8,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 6709.0,
+        "2026-07-05": 7478.0,
+        "2026-07-06": 8311.0,
+        "2026-07-07": 8557.0
       }
     },
     {
@@ -29,6 +43,15 @@
           "Discharge at 72.8% of Nepal's local danger level",
           "Rainfall rose to 112.8 mm with 76.2% soil moisture"
         ]
+      },
+      "river": "Koshi",
+      "travel_hours": 60,
+      "travel_days": 2,
+      "pct_of_local_danger": 72.8,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 6940.0,
+        "2026-07-05": 6553.0
       }
     },
     {
@@ -44,6 +67,15 @@
           "Discharge at 70.5% of local danger level",
           "River level and discharge fell from 2026-07-02 peak"
         ]
+      },
+      "river": "Ganga",
+      "travel_hours": 48,
+      "travel_days": 2,
+      "pct_of_local_danger": 70.5,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 23244.0,
+        "2026-07-05": 21152.0
       }
     },
     {
@@ -59,6 +91,15 @@
           "Discharge at 3327 m3/s, 73.9% of local danger",
           "Rainfall reached 118.9 mm and soil moisture 81.6%"
         ]
+      },
+      "river": "Manas",
+      "travel_hours": 36,
+      "travel_days": 2,
+      "pct_of_local_danger": 73.9,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 3270.0,
+        "2026-07-05": 3327.0
       }
     },
     {
@@ -74,6 +115,63 @@
           "Discharge at 71.9% of local danger level",
           "Heavy rainfall and soil moisture increased"
         ]
+      },
+      "river": "Barak/Meghna",
+      "travel_hours": 30,
+      "travel_days": 1,
+      "pct_of_local_danger": 71.9,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 4312.0
+      }
+    }
+  ],
+  "combined": [
+    {
+      "arrival_date": "2026-07-04",
+      "combined_inflow_m3s": 44475,
+      "nations_reporting": 5,
+      "complete": true,
+      "above_danger": true,
+      "by_nation_m3s": {
+        "India": 23244,
+        "Nepal": 6940,
+        "China": 6709,
+        "Myanmar": 4312,
+        "Bhutan": 3270
+      }
+    },
+    {
+      "arrival_date": "2026-07-05",
+      "combined_inflow_m3s": 38510,
+      "nations_reporting": 4,
+      "complete": false,
+      "above_danger": false,
+      "by_nation_m3s": {
+        "India": 21152,
+        "China": 7478,
+        "Nepal": 6553,
+        "Bhutan": 3327
+      }
+    },
+    {
+      "arrival_date": "2026-07-06",
+      "combined_inflow_m3s": 8311,
+      "nations_reporting": 1,
+      "complete": false,
+      "above_danger": false,
+      "by_nation_m3s": {
+        "China": 8311
+      }
+    },
+    {
+      "arrival_date": "2026-07-07",
+      "combined_inflow_m3s": 8557,
+      "nations_reporting": 1,
+      "complete": false,
+      "above_danger": false,
+      "by_nation_m3s": {
+        "China": 8557
       }
     }
   ],

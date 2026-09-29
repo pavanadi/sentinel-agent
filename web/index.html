@@ -4,37 +4,1330 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sentinel -- Federated Flood Early Warning</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+:root {
+  --bg: #060c18;
+  --panel: #0e1830;
+  --panel-2: #132140;
+  --line: #22335a;
+  --text: #eaf1fb;
+  --dim: #9db0d1;
+  --accent: #5cc8ff;
+  --water: #4aa8e8;
+  --mid: #e6b84a;
+  --high: #ef6a55;
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 700px at 20% -10%, #0d1d3d 0%, var(--bg) 60%);
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [role="button"]:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; gap: 24px; padding: 14px 28px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+.brand h1 { margin: 0; font-size: 24px; letter-spacing: .04em; line-height: 1; }
+.brand p { margin: 3px 0 0; font-size: 13px; color: var(--dim); }
+.logo { width: 38px; height: 38px; color: var(--accent); flex: none; }
+.logo-wave { animation: logo-flow 2.4s linear infinite; }
+
+.mode-switch { display: inline-flex; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; }
+.mode-switch button { background: transparent; border: 0; padding: 9px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--dim); transition: background .2s, color .2s; }
+.mode-switch button[aria-selected="true"] { background: var(--accent); color: #04121f; }
+
+.actions { display: flex; gap: 8px; }
+.ghost { background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; font-size: 14px; color: var(--text); transition: border-color .2s, background .2s; }
+.ghost:hover { border-color: var(--accent); background: #0f1f3d; }
+
+/* ---------- layout ---------- */
+.layout { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 20px; padding: 20px 28px; min-height: 0; }
+.map-wrap { display: flex; flex-direction: column; min-width: 0; background: #081630; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.map-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.caption { margin: 0; font-size: 15px; color: var(--text); }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--dim); white-space: nowrap; }
+.legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+.legend .ln { display: inline-block; width: 16px; height: 0; border-top: 2px dashed var(--accent); margin-right: 5px; vertical-align: middle; }
+.dot.mid { background: var(--mid); }
+.dot.high { background: var(--high); }
+.dot.water { background: var(--water); }
+
+#map { display: block; flex: none; width: 100%; height: auto; aspect-ratio: 1000 / 580; max-height: calc(100vh - 300px); min-height: 190px; }
+.grid path { stroke: #5cc8ff; stroke-opacity: .05; stroke-width: 1; fill: none; }
+.compass text, .map-note { fill: #8fa3c7; font-size: 12px; }
+.map-note { fill-opacity: .8; }
+
+/* ---------- map: rivers ---------- */
+.river-bed { fill: none; stroke: #16345f; stroke-width: 12; stroke-linecap: round; stroke-opacity: .7; transition: stroke-width .6s, stroke-opacity .6s; }
+.river { fill: none; stroke: var(--water); stroke-width: 3; stroke-linecap: round; stroke-opacity: .75; transition: stroke-width .6s, stroke-opacity .6s; }
+.river-flow { fill: none; stroke: #bfe6ff; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 2 16; stroke-opacity: .7; animation: flow linear infinite; }
+.river-g.dry .river { stroke-opacity: .25; stroke-dasharray: 3 7; }
+.river-g.dry .river-flow { opacity: 0; }
+.river-g.dry .river-bed { stroke-opacity: .25; }
+.travel { font-size: 12px; fill: var(--dim); text-anchor: middle; pointer-events: none; }
+.travel-bg { fill: #081630; fill-opacity: .85; stroke: var(--line); }
+.pulse-dot { pointer-events: none; }
+
+/* ---------- map: nations ---------- */
+.nation { cursor: pointer; transition: opacity .5s ease, filter .5s ease; outline: none; }
+.nation .disc { fill: rgba(22, 40, 76, .95); stroke: #4a6ba3; stroke-width: 2; transition: fill .4s, stroke .4s; }
+.nation .ring { fill: none; stroke: #8fa3c7; stroke-opacity: .45; stroke-width: 1.5; stroke-dasharray: 5 7; animation: ring-drift 30s linear infinite; }
+.nation .halo { opacity: 0; transition: opacity .7s ease; pointer-events: none; }
+.nation.revealed .halo { opacity: 1; }
+.nation:hover .disc, .nation:focus-visible .disc { stroke: var(--accent); }
+.nation.selected .disc { stroke: var(--accent); stroke-width: 3; }
+.nation.selected .ring { stroke: var(--accent); stroke-opacity: .9; }
+.nation .name { fill: var(--text); font-size: 17px; font-weight: 700; text-anchor: middle; pointer-events: none; }
+.nation .river-name { fill: var(--dim); font-size: 12px; text-anchor: middle; pointer-events: none; }
+.nation .status { fill: var(--dim); font-size: 13px; text-anchor: middle; pointer-events: none; }
+.nation.revealed .status { fill: var(--mid); font-weight: 700; }
+.nation.shared .status { fill: var(--accent); font-weight: 700; }
+.nation .lock { pointer-events: none; }
+.nation .lock rect { fill: #8fa3c7; }
+.nation .lock path { fill: none; stroke: #8fa3c7; stroke-width: 2.2; stroke-linecap: round; }
+.nation .qmark { fill: var(--text); font-size: 44px; font-weight: 800; text-anchor: middle; opacity: 0; transition: opacity .4s; pointer-events: none; }
+.nation.fogged { opacity: .3; filter: blur(2.5px) saturate(.5); }
+.nation.fogged .qmark { opacity: .6; }
+.nation.fogged .name, .nation.fogged .status, .nation.fogged .lock, .nation.fogged .river-name { opacity: 0; }
+.nation.sending .ring { stroke: var(--accent); stroke-opacity: 1; }
+.nation.idle .status { fill: #6d80a3; font-weight: 500; }
+
+/* Bangladesh */
+.bd .disc { fill: rgba(20, 44, 70, .96); stroke: #5b86c4; stroke-width: 2.5; transition: fill .5s, stroke .5s; }
+.bd .name { fill: var(--text); font-size: 19px; font-weight: 800; text-anchor: middle; }
+.bd .sub { fill: var(--dim); font-size: 12px; text-anchor: middle; }
+.bd .val { fill: var(--dim); font-size: 14px; font-weight: 700; text-anchor: middle; }
+.bd .qmark { fill: var(--text); font-size: 30px; font-weight: 800; text-anchor: middle; opacity: .55; transition: opacity .4s; }
+.bd.known .qmark { opacity: 0; }
+.bd.known .val { fill: var(--text); }
+.bd.flood .disc { fill: rgba(80, 26, 30, .95); stroke: var(--high); }
+.bd.flood .val { fill: #ffb3a6; }
+.bd.partial .disc { stroke: var(--mid); stroke-dasharray: 6 5; }
+.impact-ring { fill: none; stroke: var(--high); stroke-width: 3; opacity: 0; pointer-events: none; transform-box: fill-box; transform-origin: center; }
+.bd.flood.pulse .impact-ring { animation: impact 2.2s ease-out infinite; }
+.bd.flood.pulse .impact-ring.b { animation-delay: 1.1s; }
+
+/* ---------- map: hub, links, packets ---------- */
+.hub-core { fill: #0f2a52; stroke: var(--accent); stroke-width: 2.5; }
+.hub-ring { fill: none; stroke: var(--accent); stroke-opacity: .4; stroke-width: 1.5; stroke-dasharray: 3 6; animation: ring-drift 20s linear infinite reverse; }
+.hub-glow { fill: var(--accent); opacity: 0; transition: opacity .6s; }
+.hub.on .hub-glow { opacity: .18; }
+.hub-count { fill: var(--text); font-size: 17px; font-weight: 700; text-anchor: middle; }
+.hub-label { fill: var(--text); font-size: 14px; font-weight: 600; text-anchor: middle; }
+.hub-sub { fill: var(--dim); font-size: 12px; text-anchor: middle; }
+.link { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-dasharray: 4 9; opacity: 0; transition: opacity .5s; }
+#map.fed .link { opacity: .45; animation: flow 1.4s linear infinite; }
+.warn-link { fill: none; stroke: var(--high); stroke-width: 2.2; stroke-dasharray: 4 8; opacity: 0; transition: opacity .6s; }
+#map.warned .warn-link { opacity: .8; animation: flow 1.2s linear infinite; }
+.packet circle { fill: var(--accent); }
+.packet .pulse { fill: none; stroke: var(--accent); stroke-opacity: .6; }
+.packet.warn circle { fill: var(--high); }
+.packet.warn .pulse { stroke: var(--high); }
+.clock { opacity: 0; transition: opacity .5s; pointer-events: none; }
+#map.racing .clock { opacity: 1; }
+.clock .k { fill: var(--dim); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.clock .d { fill: var(--text); font-size: 26px; font-weight: 800; }
+.clock .t { fill: var(--mid); font-size: 12px; font-weight: 700; }
+
+/* ---------- scrubber ---------- */
+.scrubber { padding: 10px 24px 16px; border-top: 1px solid var(--line); opacity: .35; transition: opacity .5s; }
+.scrubber.on { opacity: 1; }
+.scrubber label { display: block; font-size: 13px; color: var(--dim); margin-bottom: 8px; }
+.scrub-body { position: relative; padding: 0 9px 30px; }
+#scrub { width: 100%; margin: 0; accent-color: var(--accent); height: 22px; cursor: pointer; }
+#scrub:disabled { cursor: default; }
+.ticks { position: absolute; left: 9px; right: 9px; top: 24px; height: 24px; }
+.ticks span { position: absolute; transform: translateX(-50%); font-size: 12px; color: var(--dim); white-space: nowrap; text-align: center; line-height: 1.25; transition: color .3s; }
+.ticks span:first-child { transform: none; text-align: left; }
+.ticks span:last-child { transform: translateX(-100%); text-align: right; }
+.ticks span.flood { color: var(--high); font-weight: 700; }
+.ticks span.cur { color: var(--text); }
+.ticks span.flood.cur { color: #ff8e7d; }
+
+/* ---------- side panel ---------- */
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; overflow-y: auto; max-height: calc(100vh - 150px); }
+.panel h2 { margin: 0 0 8px; font-size: 22px; line-height: 1.2; }
+.panel p { line-height: 1.55; }
+.panel .lead { color: var(--dim); font-size: 15px; margin: 0 0 16px; }
+.panel .narr { font-size: 15px; color: var(--text); margin: 12px 0; min-height: 96px; }
+.panel .hint { color: var(--dim); font-size: 13px; }
+.view { animation: fade-in .35s ease; }
+.head-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.tag { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.sub-line { color: var(--dim); font-size: 14px; margin: 0 0 4px; }
+.sub-line b { color: var(--text); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600; transition: border-color .2s, transform .2s; }
+.chip:hover { border-color: var(--accent); transform: translateY(-1px); }
+.chip i { width: 9px; height: 9px; border-radius: 50%; background: #8fa3c7; display: inline-block; }
+.chip small { color: var(--mid); font-weight: 600; font-size: 12px; }
+
+.quote { margin: 16px 0 0; padding: 12px 14px; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 10px; font-size: 15px; line-height: 1.5; }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #04121f; border: 0; border-radius: 12px; padding: 12px 18px; font-size: 15px; font-weight: 700; transition: transform .15s, box-shadow .2s; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 6px 22px -6px var(--accent); }
+.btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn.secondary:hover { border-color: var(--accent); box-shadow: none; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+.local { margin-top: 12px; display: grid; gap: 10px; }
+.stat-row { display: flex; gap: 10px; }
+.stat { flex: 1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.stat span { display: block; font-size: 12px; color: var(--dim); }
+.stat b { font-size: 20px; }
+.stat b.amber { color: var(--mid); }
+.stat b.ok { color: var(--text); }
+
+.dgauge { margin-top: 2px; }
+.dgauge .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); margin-bottom: 6px; }
+.dgauge .track { position: relative; height: 12px; background: #1a2a4b; border-radius: 999px; }
+.dgauge .track i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 999px; background: var(--mid); transition: width .9s cubic-bezier(.2, .8, .2, 1); }
+.dgauge .track em { position: absolute; right: 0; top: -4px; bottom: -4px; width: 2px; background: var(--high); }
+
+dl.signal { margin: 14px 0 0; display: grid; gap: 10px; }
+dl.signal > div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: baseline; }
+dl.signal dt { color: var(--dim); font-size: 13px; }
+dl.signal dd { margin: 0; font-size: 15px; font-weight: 600; }
+
+.meter { display: grid; grid-template-columns: 92px 1fr 44px; gap: 10px; align-items: center; margin-top: 10px; font-size: 13px; color: var(--dim); }
+.meter b { color: var(--text); font-size: 14px; text-align: right; }
+.bar { height: 9px; background: #1a2a4b; border-radius: 999px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--accent); transition: width .8s cubic-bezier(.2, .8, .2, 1); }
+.bar i.mid { background: var(--mid); }
+
+.receipt { margin-top: 18px; border: 1px dashed var(--line); border-radius: 12px; padding: 12px 14px; font-size: 13px; display: grid; gap: 8px; }
+.receipt > div { display: grid; grid-template-columns: 112px 1fr; gap: 8px; color: var(--dim); }
+.receipt b { color: var(--text); font-weight: 600; }
+.receipt .sent b { color: var(--accent); }
+.shares { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 13px; }
+.shares td { padding: 3px 0; border-bottom: 1px solid rgba(34, 51, 90, .6); color: var(--text); }
+.shares td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--accent); }
+
+.alone { margin-top: 16px; background: var(--panel-2); border-left: 3px solid var(--mid); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+.alone strong { display: block; margin-bottom: 4px; }
+.alone p { margin: 0; color: var(--dim); }
+
+.prog { list-style: none; margin: 16px 0; padding: 0; display: grid; gap: 10px; }
+.prog li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; color: var(--dim); font-size: 14px; transition: border-color .3s, color .3s, background .3s; }
+.prog li .mark { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 13px; font-weight: 800; }
+.prog li.done { color: var(--text); border-color: var(--accent); background: #0f2244; }
+.prog li.done .mark { background: var(--accent); border-color: var(--accent); color: #04121f; }
+
+.verdict-badge { display: block; margin: 8px 0 14px; padding: 16px 18px; border-radius: 14px; background: linear-gradient(135deg, #3a1a22, #24122a); border: 1px solid var(--high); }
+.verdict-badge span { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: #ffb3a6; }
+.verdict-badge strong { display: block; font-size: 28px; line-height: 1.15; }
+.verdict-badge small { display: block; margin-top: 4px; font-size: 14px; color: var(--text); }
+.verdict-badge.clear { background: var(--panel-2); border-color: var(--line); }
+.verdict-badge.clear span { color: var(--dim); }
+
+.total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
+.total b { font-size: 26px; color: #ffb3a6; font-variant-numeric: tabular-nums; }
+.total span { color: var(--dim); font-size: 14px; }
+
+.stack { position: relative; margin: 6px 0 4px; }
+.stack .bars { display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: #1a2a4b; }
+.stack .bars i { display: block; height: 100%; width: 0; transition: width .9s cubic-bezier(.2, .8, .2, 1); border-right: 1px solid rgba(6, 12, 24, .7); }
+.stack .thr { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--text); }
+.stack .thr span { position: absolute; top: -17px; right: 0; font-size: 11px; color: var(--dim); white-space: nowrap; }
+.stack.big { margin-top: 22px; }
+.stack.big .bars { height: 28px; }
+.keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 4px 12px; margin: 10px 0 0; font-size: 13px; }
+.keys div { display: flex; align-items: center; gap: 6px; color: var(--dim); }
+.keys i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+.keys b { color: var(--text); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+.outlook { margin: 18px 0 6px; }
+.outlook h4, .reco h4, .sect { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); }
+.orow { display: grid; grid-template-columns: 46px 1fr 118px; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 10px; border: 1px solid transparent; background: transparent; width: 100%; text-align: left; color: var(--text); }
+.orow:hover { border-color: var(--line); }
+.orow.cur { border-color: var(--accent); background: #0f2244; }
+.orow .dt { font-size: 13px; font-weight: 700; }
+.orow .v { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.orow .v small { display: block; font-size: 11px; font-weight: 500; color: var(--mid); }
+.orow.flood .v { color: #ffb3a6; }
+.orow .stack { margin: 0; }
+.orow .stack .bars { height: 12px; }
+.orow .stack .thr { top: -3px; bottom: -3px; }
+
+.punch { margin: 14px 0 0; }
+.punch .chips { margin-bottom: 8px; }
+.punch p { margin: 0; font-size: 14px; color: var(--dim); }
+.punch b { color: var(--text); }
+
+.reco { margin-top: 12px; background: var(--panel-2); border-radius: 12px; padding: 14px 16px; border-left: 3px solid var(--accent); }
+.reco h4 { color: var(--accent); margin-bottom: 6px; }
+.reco p { margin: 0; font-size: 15px; }
+
+/* ---------- footer ---------- */
+.foot { display: flex; justify-content: space-between; gap: 16px; padding: 12px 28px 16px; font-size: 13px; color: var(--dim); flex-wrap: wrap; }
+
+/* ---------- animation ---------- */
+@keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes flow { to { stroke-dashoffset: -18; } }
+@keyframes logo-flow { to { stroke-dashoffset: -12; } }
+@keyframes ring-drift { to { stroke-dashoffset: -240; } }
+@keyframes impact { 0% { opacity: .85; transform: scale(.7); } 100% { opacity: 0; transform: scale(1.8); } }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr); padding: 16px; align-content: start; }
+  .panel { max-height: none; }
+  .top { padding: 12px 16px; gap: 12px; }
+  .legend { display: none; }
+  .foot { padding: 12px 16px 16px; }
+}
+@media (max-width: 520px) {
+  .brand p { font-size: 12px; }
+  .mode-switch button { padding: 8px 12px; font-size: 13px; }
+  .actions { margin-left: auto; }
+  .scrubber { padding: 10px 14px 14px; }
+  .panel { padding: 18px 16px; }
+  .receipt > div { grid-template-columns: 1fr; gap: 2px; }
+  .ticks span { font-size: 11px; }
+}
+html.static *, html.static *::before, html.static *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
 </head>
 <body>
-  <header class="page-header">
-    <h1>Sentinel</h1>
-    <p class="subtitle">Federated cross-border flood early warning -- private river data, shared insight only.</p>
-  </header>
-
-  <main>
-    <section class="nations" id="nations">
-      <!-- One .nation-card per nation is rendered here by app.js -->
-    </section>
-
-    <div class="signal-flow" aria-hidden="true">
-      <span>only anonymized signals cross this line -- never raw sensor data</span>
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="-16 -16 32 32" aria-hidden="true">
+        <circle r="13.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-opacity=".45" />
+        <path d="M-10 -4 C-6 -8 -2 0 2 -4 S 8 -8 10 -4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+        <path class="logo-wave" d="M-10 3 C-6 -1 -2 7 2 3 S 8 -1 10 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="8 4" />
+        <circle cy="9.5" r="2.2" fill="currentColor" />
+      </svg>
+      <div>
+        <h1>Sentinel</h1>
+        <p>Federated cross-border flood early warning</p>
+      </div>
     </div>
 
-    <section class="verdict" id="verdict">
-      <h2>Regional Early Warning Coordinator</h2>
-      <p class="verdict-hint">Sees only the five signals above. Never raw data from any nation.</p>
-      <div class="verdict-body" id="verdict-body">
-        <p class="placeholder">Waiting for all nation reports...</p>
+    <div class="mode-switch" role="tablist" aria-label="View mode">
+      <button id="mode-solo" role="tab" type="button" aria-selected="true">Each nation alone</button>
+      <button id="mode-fed" role="tab" type="button" aria-selected="false">Federated</button>
+    </div>
+
+    <div class="actions">
+      <button id="demo-btn" class="ghost" type="button">&#9654; Auto demo</button>
+      <button id="reset-btn" class="ghost" type="button">Reset</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="map-wrap" aria-label="Schematic of rivers draining into Bangladesh">
+      <div class="map-bar">
+        <p class="caption" id="caption">Each nation sees only its own river gauges.</p>
+        <div class="legend" aria-label="Legend">
+          <span><i class="dot mid"></i>below own danger level</span>
+          <span><i class="dot high"></i>flood threshold crossed</span>
+          <span><i class="ln"></i>shared signal</span>
+        </div>
+      </div>
+
+      <svg id="map" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid meet" role="img"
+           aria-label="Schematic: five upstream nations' rivers flowing into Bangladesh. Not to scale.">
+        <defs>
+          <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0b1a36" />
+            <stop offset="1" stop-color="#081630" />
+          </linearGradient>
+          <radialGradient id="halo-mid">
+            <stop offset="0" stop-color="#e6b84a" stop-opacity=".5" />
+            <stop offset="1" stop-color="#e6b84a" stop-opacity="0" />
+          </radialGradient>
+          <radialGradient id="halo-high">
+            <stop offset="0" stop-color="#ef6a55" stop-opacity=".6" />
+            <stop offset="1" stop-color="#ef6a55" stop-opacity="0" />
+          </radialGradient>
+          <radialGradient id="halo-water">
+            <stop offset="0" stop-color="#5cc8ff" stop-opacity=".45" />
+            <stop offset="1" stop-color="#5cc8ff" stop-opacity="0" />
+          </radialGradient>
+        </defs>
+
+        <rect width="1000" height="580" fill="url(#bg-grad)" />
+        <g class="grid" aria-hidden="true">
+          <path d="M100 0V580M200 0V580M300 0V580M400 0V580M500 0V580M600 0V580M700 0V580M800 0V580M900 0V580" />
+          <path d="M0 96H1000M0 192H1000M0 288H1000M0 384H1000M0 480H1000" />
+        </g>
+
+        <g id="links-layer"></g>
+        <g id="rivers-layer"></g>
+        <g id="pulses-layer"></g>
+        <g id="nations-layer"></g>
+        <g id="hub-layer"></g>
+        <g id="packets-layer"></g>
+
+        <g class="clock" id="clock" transform="translate(28 44)" aria-hidden="true">
+          <text class="k" id="clock-k">Water reaching Bangladesh</text>
+          <text class="d" id="clock-d" y="30"></text>
+          <text class="t" id="clock-t" y="50"></text>
+        </g>
+
+        <g class="compass" transform="translate(955 520)" aria-hidden="true">
+          <circle r="18" fill="none" stroke="#8fa3c7" stroke-opacity=".35" />
+          <path d="M0 -13 L4.5 4 L0 0 L-4.5 4 Z" fill="#8fa3c7" fill-opacity=".8" />
+          <text y="-23" text-anchor="middle">N</text>
+        </g>
+        <text class="map-note" x="16" y="550">Schematic, not to scale. Positions approximate; no borders drawn.</text>
+        <text class="map-note" x="16" y="568">Real countries, synthetic readings &#8212; not a forecast.</text>
+      </svg>
+
+      <div class="scrubber" id="scrubber">
+        <label for="scrub" id="scrub-label">Combined inflow into Bangladesh, by arrival date</label>
+        <div class="scrub-body">
+          <input id="scrub" type="range" min="0" max="3" step="1" value="0" disabled aria-describedby="scrub-label" />
+          <div class="ticks" id="ticks"></div>
+        </div>
       </div>
     </section>
+
+    <aside class="panel" id="panel" aria-live="polite"></aside>
   </main>
 
-  <footer class="page-footer">
-    <button id="replay-btn" type="button">Replay</button>
-    <span class="source-note" id="source-note">Replaying a captured run</span>
+  <footer class="foot">
+    <span>&#128274; Rainfall, soil moisture, snowmelt, river levels and gauge history never leave a nation. Only derived signals cross the border.</span>
+    <span class="source-note" id="source-note">Loading run...</span>
   </footer>
 
-  <script src="app.js"></script>
+  <script>
+// Copy of data/sample-run.json for opening index.html straight from disk (file://).
+// Only used when fetch() of the JSON fails. Regenerated by scripts/export_transcript.py.
+/* SENTINEL_FALLBACK_START */
+window.SENTINEL_FALLBACK_RUN = {
+  "prompt": "Brief me on river conditions for Bangladesh.",
+  "as_of": "2026-07-03",
+  "downstream": "Bangladesh",
+  "threshold_m3s": 44000,
+  "nations": [
+    {
+      "country": "China",
+      "narrative": "As of 2026-07-03, discharge reached 8,557 m³/s, or 77.8% of China’s local danger level of 11,000 m³/s; no local alert was active. River level rose from 5.99 m on 2026-06-27 to 8.38 m, while daily rainfall increased from 37.8 mm to 111.7 mm. Conditions are elevated and rising, but remain below China’s local danger threshold.",
+      "signal": {
+        "country": "China",
+        "severity": 0.78,
+        "anomaly_type": "elevated rising flow",
+        "trend_vector": "rainfall, river level, and discharge rising",
+        "confidence": 0.98,
+        "key_evidence": [
+          "Discharge at 8557 m3/s, 77.8% of local danger",
+          "River level rose from 5.99 m to 8.38 m in seven days"
+        ]
+      },
+      "river": "Yarlung Tsangpo",
+      "travel_hours": 96,
+      "travel_days": 4,
+      "pct_of_local_danger": 77.8,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 6709.0,
+        "2026-07-05": 7478.0,
+        "2026-07-06": 8311.0,
+        "2026-07-07": 8557.0
+      }
+    },
+    {
+      "country": "Nepal",
+      "narrative": "As of 2026-07-03, Koshi discharge was 6,553 m³/s, or 72.8% of Nepal’s local danger level, with no local alert active. Discharge eased from 6,940 m³/s on 2026-07-02, although rainfall increased to 112.8 mm and soil moisture reached 76.2%. Local flood risk is elevated but remains below Nepal’s danger threshold.",
+      "signal": {
+        "country": "Nepal",
+        "severity": 0.73,
+        "anomaly_type": "elevated flow below danger",
+        "trend_vector": "flow eased after rising while rainfall increased",
+        "confidence": 0.98,
+        "key_evidence": [
+          "Discharge at 72.8% of Nepal's local danger level",
+          "Rainfall rose to 112.8 mm with 76.2% soil moisture"
+        ]
+      },
+      "river": "Koshi",
+      "travel_hours": 60,
+      "travel_days": 2,
+      "pct_of_local_danger": 72.8,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 6940.0,
+        "2026-07-05": 6553.0
+      }
+    },
+    {
+      "country": "India",
+      "narrative": "As of 2026-07-03, Ganga discharge was 21,152 m³/s, or 70.5% of India’s local danger level, with no local alert active. River level and discharge declined from 8.50 m and 23,244 m³/s on 2026-07-02 to 7.65 m and 21,152 m³/s, respectively. Flood risk remains elevated but below the local danger threshold amid heavy rainfall of 111.6 mm and high soil moisture of 80.0%.",
+      "signal": {
+        "country": "India",
+        "severity": 0.65,
+        "anomaly_type": "heavy rainfall with elevated flow",
+        "trend_vector": "rising rainfall but river flow easing from peak",
+        "confidence": 0.98,
+        "key_evidence": [
+          "Discharge at 70.5% of local danger level",
+          "River level and discharge fell from 2026-07-02 peak"
+        ]
+      },
+      "river": "Ganga",
+      "travel_hours": 48,
+      "travel_days": 2,
+      "pct_of_local_danger": 70.5,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 23244.0,
+        "2026-07-05": 21152.0
+      }
+    },
+    {
+      "country": "Bhutan",
+      "narrative": "As of 2026-07-03, Manas discharge was 3,327 m³/s, or 73.9% of Bhutan’s 4,500 m³/s local danger level, with no local alert active. Discharge has risen for four consecutive days, while daily rainfall reached 118.9 mm and soil moisture increased to 81.6%. Local flood risk is elevated but remains below Bhutan’s danger threshold.",
+      "signal": {
+        "country": "Bhutan",
+        "severity": 0.74,
+        "anomaly_type": "elevated flow after heavy rainfall",
+        "trend_vector": "rainfall, soil moisture, and discharge rising",
+        "confidence": 0.97,
+        "key_evidence": [
+          "Discharge at 3327 m3/s, 73.9% of local danger",
+          "Rainfall reached 118.9 mm and soil moisture 81.6%"
+        ]
+      },
+      "river": "Manas",
+      "travel_hours": 36,
+      "travel_days": 2,
+      "pct_of_local_danger": 73.9,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 3270.0,
+        "2026-07-05": 3327.0
+      }
+    },
+    {
+      "country": "Myanmar",
+      "narrative": "As of 2026-07-03, discharge was 4,312 m³/s, or 71.9% of Myanmar’s local danger level, with no local alert active. River level rose from 5.55 m to 7.50 m over seven days, while discharge increased steadily from 2,586 m³/s. Local flood risk is elevated and rising due to 103.2 mm of daily rainfall and soil moisture reaching 82.1%, but conditions remain below Myanmar’s danger threshold.",
+      "signal": {
+        "country": "Myanmar",
+        "severity": 0.72,
+        "anomaly_type": "elevated rising flow",
+        "trend_vector": "river level and discharge rising steadily",
+        "confidence": 0.97,
+        "key_evidence": [
+          "Discharge at 71.9% of local danger level",
+          "Heavy rainfall and soil moisture increased"
+        ]
+      },
+      "river": "Barak/Meghna",
+      "travel_hours": 30,
+      "travel_days": 1,
+      "pct_of_local_danger": 71.9,
+      "local_alert": 0,
+      "projected_inflow_m3s": {
+        "2026-07-04": 4312.0
+      }
+    }
+  ],
+  "combined": [
+    {
+      "arrival_date": "2026-07-04",
+      "combined_inflow_m3s": 44475,
+      "nations_reporting": 5,
+      "complete": true,
+      "above_danger": true,
+      "by_nation_m3s": {
+        "India": 23244,
+        "Nepal": 6940,
+        "China": 6709,
+        "Myanmar": 4312,
+        "Bhutan": 3270
+      }
+    },
+    {
+      "arrival_date": "2026-07-05",
+      "combined_inflow_m3s": 38510,
+      "nations_reporting": 4,
+      "complete": false,
+      "above_danger": false,
+      "by_nation_m3s": {
+        "India": 21152,
+        "China": 7478,
+        "Nepal": 6553,
+        "Bhutan": 3327
+      }
+    },
+    {
+      "arrival_date": "2026-07-06",
+      "combined_inflow_m3s": 8311,
+      "nations_reporting": 1,
+      "complete": false,
+      "above_danger": false,
+      "by_nation_m3s": {
+        "China": 8311
+      }
+    },
+    {
+      "arrival_date": "2026-07-07",
+      "combined_inflow_m3s": 8557,
+      "nations_reporting": 1,
+      "complete": false,
+      "above_danger": false,
+      "by_nation_m3s": {
+        "China": 8557
+      }
+    }
+  ],
+  "coordinator": {
+    "narrative": "Bangladesh needs a flood warning for 2026-07-04, when combined projected inflow is 44,475 m3/s, above the 44,000 m3/s flood threshold, providing about one day of lead time from today. India contributes most on the warning date at 23,244 m3/s, followed by Nepal 6,940 m3/s, China 6,709 m3/s, Myanmar 4,312 m3/s, and Bhutan 3,270 m3/s. No single nation could identify this threat because each observed flows below its own local danger level and issued no local alert; the risk appears only when all five inflows converge in Bangladesh. For 2026-07-05, the reported combined inflow is 38,510 m3/s, but this is a lower bound because only four nations report, while the 8,311 m3/s on July 6 and 8,557 m3/s on July 7 are also incomplete lower bounds.",
+    "most_impacted": "Bangladesh",
+    "recommendation": "Immediately activate a coordinated July 4 flood-readiness operation—issue public warnings, pre-position evacuation and relief resources in exposed districts, and require rapid upstream updates to clarify the incomplete July 5–7 outlook."
+  }
+};
+/* SENTINEL_FALLBACK_END */
+</script>
+  <script>
+/**
+ * Sentinel dashboard: an interactive schematic of the federated flood demo.
+ *
+ *   - "Each nation alone": click a nation. Everything else fades into fog: each
+ *     country sees only its own river, and every one of them is below its own
+ *     local danger level.
+ *   - "Federated": each nation's signal (incl. its projected inflow by arrival
+ *     date) flies to the coordinator, the water that reaches Bangladesh on the
+ *     warning date is replayed down the rivers, and the verdict is revealed.
+ *   - The scrubber steps through arrival dates. Dates where not every nation's
+ *     water is in view yet are lower bounds.
+ *
+ * Data: a REPLAY of a captured SuperGrid run (data/sample-run.json, produced by
+ * scripts/export_transcript.py). The browser computes nothing new: every number
+ * shown comes from that file (only differences/dates derived from it, e.g. the
+ * margin over the threshold and source date = arrival date - travel_days).
+ * Animation speeds are illustrative, scaled from each river's travel time.
+ */
+"use strict";
+
+const DATA_URL = "data/sample-run.json";
+const NS = "http://www.w3.org/2000/svg";
+const REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+// Headless Chrome (screenshots) does not advance rAF/CSS animations under virtual time: use timers there.
+const HEADLESS = /HeadlessChrome/.test(navigator.userAgent);
+if (HEADLESS) document.documentElement.classList.add("static");
+const frame = HEADLESS ? (cb) => setTimeout(() => cb(performance.now()), 16) : (cb) => requestAnimationFrame(cb);
+
+// Schematic layout: approximate relative positions only (no borders, not to scale).
+const BD = { x: 520, y: 440 };
+const HUB = { x: 880, y: 74 };
+const LAYOUT = {
+  China:   { x: 500, y: 86,  river: "M 500 86 C 650 60 680 280 520 440",  label: 0.36, link: [700, 20] },
+  Nepal:   { x: 250, y: 150, river: "M 250 150 C 320 270 420 380 520 440", label: 0.45, link: [540, -80], side: "left" },
+  India:   { x: 150, y: 320, river: "M 150 320 C 270 340 390 430 520 440", label: 0.42, link: [520, 250] },
+  Bhutan:  { x: 745, y: 180, river: "M 745 180 C 730 300 640 380 520 440", label: 0.42, link: [830, 120], side: "right" },
+  Myanmar: { x: 862, y: 352, river: "M 862 352 C 780 390 660 450 520 440", label: 0.35, link: [940, 220] },
+};
+const FALLBACK_SLOTS = Object.values(LAYOUT);
+const COLORS = { China: "#7aa7ff", Nepal: "#b48cf2", India: "#3fd0c0", Bhutan: "#f29ac1", Myanmar: "#9bd46a" };
+const FALLBACK_COLORS = Object.values(COLORS);
+const PRIVATE_KINDS = "rainfall, soil moisture, snowmelt, river level, gauge history";
+const SEC_PER_TRAVEL_HOUR = 0.1; // ambient flow: a 96 h river takes 9.6 s to traverse (illustrative)
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// ---------------------------------------------------------------- helpers
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const sleep = (ms) => new Promise((r) => setTimeout(r, REDUCED ? Math.min(ms, 30) : ms));
+const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+const pct = (x) => Math.round(Number(x) * 100);
+const fmt = (n) => Math.round(Number(n)).toLocaleString("en-US");
+const dayNum = (iso) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86400000;
+const isoOf = (d) => new Date(d * 86400000).toISOString().slice(0, 10);
+const short = (iso) => `${MONTHS[+iso.slice(5, 7) - 1]} ${+iso.slice(8, 10)}`;
+const long = (iso) => `${short(iso)}, ${iso.slice(0, 4)}`;
+
+function svgEl(tag, attrs, parent, text) {
+  const el = document.createElementNS(NS, tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => el.setAttribute(k, v));
+  if (text !== undefined) el.textContent = text;
+  if (parent) parent.appendChild(el);
+  return el;
+}
+
+function typeInto(el, text) {
+  if (!el) return Promise.resolve();
+  if (REDUCED) { el.textContent = text; return Promise.resolve(); }
+  clearInterval(el._timer);
+  return new Promise((resolve) => {
+    let i = 0;
+    el._timer = setInterval(() => {
+      if (!el.isConnected) { clearInterval(el._timer); resolve(); return; }
+      i += 3;
+      el.textContent = text.slice(0, i);
+      if (i >= text.length) { clearInterval(el._timer); resolve(); }
+    }, 12);
+  });
+}
+
+// ---------------------------------------------------------------- state
+const state = {
+  run: null,
+  mode: "solo",     // "solo" | "fed"
+  selected: null,   // index of the nation being inspected
+  received: 0,
+  fedDone: false,
+  busy: false,
+  token: 0,         // bump to cancel any running animation
+  dateIdx: 0,       // index into run.combined
+};
+
+let nations = [];   // { g, halo, status }
+let rivers = [];    // { g, path, len }
+let links = [];
+let hub = {};
+let bd = {};
+let tickEls = [];
+
+const map = () => $("map");
+const N = () => state.run.nations;
+const nameOf = (i) => N()[i].country;
+const signalOf = (i) => N()[i].signal || {};
+const colorOf = (i) => COLORS[nameOf(i)] || FALLBACK_COLORS[i % FALLBACK_COLORS.length];
+const slotOf = (i) => LAYOUT[nameOf(i)] || FALLBACK_SLOTS[i % FALLBACK_SLOTS.length];
+const combined = () => state.run.combined || [];
+const threshold = () => state.run.threshold_m3s;
+const downstream = () => state.run.downstream || "Bangladesh";
+const warnIdx = () => combined().findIndex((r) => r.above_danger);
+const rowAt = (k) => combined()[k];
+const sharesOf = (i) => N()[i].projected_inflow_m3s || {};
+const barMax = () => Math.max(threshold() * 1.12, ...combined().map((r) => r.combined_inflow_m3s));
+
+// ---------------------------------------------------------------- data
+async function loadRun() {
+  if (location.protocol === "file:" && window.SENTINEL_FALLBACK_RUN) {
+    return { run: window.SENTINEL_FALLBACK_RUN, source: "embedded" };
+  }
+  try {
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return { run: await res.json(), source: "file" };
+  } catch (err) {
+    if (window.SENTINEL_FALLBACK_RUN) return { run: window.SENTINEL_FALLBACK_RUN, source: "embedded" };
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------- map building
+function buildMap() {
+  // rivers (beneath nodes so they vanish into the Bangladesh disc)
+  const rl = $("rivers-layer");
+  rl.innerHTML = "";
+  rivers = N().map((n, i) => {
+    const s = slotOf(i);
+    const g = svgEl("g", { class: "river-g" }, rl);
+    svgEl("path", { class: "river-bed", d: s.river }, g);
+    const path = svgEl("path", { class: "river", d: s.river, stroke: colorOf(i) }, g);
+    const flow = svgEl("path", { class: "river-flow", d: s.river }, g);
+    const len = path.getTotalLength();
+    // Ambient flow speed scaled so traversal time is proportional to travel time.
+    const traverse = (n.travel_hours || 48) * SEC_PER_TRAVEL_HOUR;
+    flow.style.animationDuration = `${(18 / (len / traverse)).toFixed(2)}s`;
+    if (n.travel_hours) {
+      const p = path.getPointAtLength(len * s.label);
+      const txt = `${n.travel_hours} h`;
+      const w = 12 + txt.length * 7;
+      svgEl("rect", { class: "travel-bg", x: p.x - w / 2, y: p.y - 10, width: w, height: 19, rx: 9.5 }, g);
+      svgEl("text", { class: "travel", x: p.x, y: p.y + 4 }, g, txt);
+    }
+    return { g, path, len };
+  });
+
+  // upstream nations
+  const layer = $("nations-layer");
+  layer.innerHTML = "";
+  nations = N().map((n, i) => {
+    const s = slotOf(i);
+    const g = svgEl("g", { class: "nation", tabindex: "0", role: "button", "aria-label": `${n.country}: show its private analysis` }, layer);
+    const halo = svgEl("circle", { class: "halo", cx: s.x, cy: s.y, r: 90, fill: "url(#halo-mid)" }, g);
+    svgEl("circle", { class: "ring", cx: s.x, cy: s.y, r: 50 }, g);
+    svgEl("circle", { class: "disc", cx: s.x, cy: s.y, r: 40 }, g);
+    svgEl("circle", { cx: s.x, cy: s.y + 26, r: 4, fill: colorOf(i) }, g);
+    const lock = svgEl("g", { class: "lock", transform: `translate(${s.x} ${s.y - 20})` }, g);
+    svgEl("rect", { x: -7, y: -2, width: 14, height: 10, rx: 2.2 }, lock);
+    svgEl("path", { d: "M-4.3 -2 v-3.5 a4.3 4.3 0 0 1 8.6 0 v3.5" }, lock);
+    svgEl("text", { class: "name", x: s.x, y: s.y + 11, style: `font-size:${n.country.length > 6 ? 15 : 17}px` }, g, n.country);
+    svgEl("text", { class: "qmark", x: s.x, y: s.y + 16 }, g, "?");
+    // Labels go below the node, or beside it where the river leaves downward.
+    const lx = s.side === "right" ? s.x + 54 : s.side === "left" ? s.x - 54 : s.x;
+    const ly = s.side ? s.y - 4 : s.y + 60;
+    const anchor = s.side === "right" ? "start" : s.side === "left" ? "end" : "middle";
+    svgEl("text", { class: "river-name", x: lx, y: ly, style: `text-anchor:${anchor}` }, g, n.river || "");
+    const status = svgEl("text", { class: "status", x: lx, y: ly + 18, style: `text-anchor:${anchor}` }, g, "private data");
+    g.addEventListener("click", () => onNation(i));
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNation(i); } });
+    return { g, halo, status };
+  });
+
+  // Bangladesh
+  const g = svgEl("g", { class: "bd" }, layer);
+  svgEl("circle", { class: "impact-ring", cx: BD.x, cy: BD.y, r: 56 }, g);
+  svgEl("circle", { class: "impact-ring b", cx: BD.x, cy: BD.y, r: 56 }, g);
+  svgEl("circle", { class: "disc", cx: BD.x, cy: BD.y, r: 52 }, g);
+  svgEl("text", { class: "name", x: BD.x, y: BD.y - 6 }, g, downstream());
+  const q = svgEl("text", { class: "qmark", x: BD.x, y: BD.y + 26 }, g, "?");
+  const sub = svgEl("text", { class: "sub", x: BD.x, y: BD.y + 72 }, g, "downstream");
+  const val = svgEl("text", { class: "val", x: BD.x, y: BD.y + 92 }, g, "can't see upstream rivers");
+  bd = { g, q, sub, val };
+
+  // links nation -> coordinator hub
+  const ll = $("links-layer");
+  ll.innerHTML = "";
+  links = N().map((_, i) => {
+    const s = slotOf(i);
+    const [cx, cy] = s.link || [(s.x + HUB.x) / 2, (s.y + HUB.y) / 2];
+    return svgEl("path", { class: "link", d: `M ${s.x} ${s.y} Q ${cx} ${cy} ${HUB.x} ${HUB.y}` }, ll);
+  });
+  links.warn = svgEl("path", { class: "warn-link", d: `M ${HUB.x} ${HUB.y} Q 900 330 ${BD.x} ${BD.y}` }, ll);
+
+  // coordinator hub
+  const hl = $("hub-layer");
+  hl.innerHTML = "";
+  const h = svgEl("g", { class: "hub", transform: `translate(${HUB.x} ${HUB.y})` }, hl);
+  svgEl("circle", { class: "hub-glow", r: 60 }, h);
+  svgEl("circle", { class: "hub-ring", r: 38 }, h);
+  svgEl("circle", { class: "hub-core", r: 28 }, h);
+  const count = svgEl("text", { class: "hub-count", y: 6 }, h, `0/${N().length}`);
+  svgEl("text", { class: "hub-label", y: 58 }, h, "Coordinator");
+  svgEl("text", { class: "hub-sub", y: 75 }, h, "sees signals only");
+  hub = { g: h, count };
+
+  // scrubber ticks: one per arrival date
+  const rows = combined();
+  $("scrub").max = String(Math.max(0, rows.length - 1));
+  const ticks = $("ticks");
+  ticks.innerHTML = "";
+  tickEls = rows.map((r, k) => {
+    const span = document.createElement("span");
+    span.style.left = rows.length > 1 ? `${(k / (rows.length - 1)) * 100}%` : "0%";
+    span.innerHTML = `${esc(short(r.arrival_date))}<br>${r.complete ? "" : "&ge;"}${esc(fmt(r.combined_inflow_m3s))}`;
+    span.classList.toggle("flood", !!r.above_danger);
+    span.title = r.complete ? "All nations reporting" : `Lower bound: ${r.nations_reporting}/${N().length} nations' water in view`;
+    ticks.appendChild(span);
+    return span;
+  });
+}
+
+// ---------------------------------------------------------------- map state
+function soloStatus(i) {
+  const n = N()[i];
+  return typeof n.pct_of_local_danger === "number" ? `${Math.round(n.pct_of_local_danger)}% of own danger level` : "analysis ready";
+}
+
+function revealNation(i, on) {
+  const n = nations[i];
+  n.g.classList.toggle("revealed", on);
+  n.g.classList.remove("shared", "idle");
+  n.status.textContent = on ? soloStatus(i) : "private data";
+  if (on) n.halo.setAttribute("r", String(50 + 60 * ((N()[i].pct_of_local_danger || 50) / 100)));
+}
+
+function showShared(i) {
+  // Federated: the nation's water arriving on the selected date (from its own shared signal).
+  const row = rowAt(state.dateIdx);
+  const g = nations[i].g;
+  g.classList.remove("revealed");
+  const v = row && row.by_nation_m3s ? row.by_nation_m3s[nameOf(i)] : undefined;
+  g.classList.toggle("shared", v !== undefined);
+  g.classList.toggle("idle", v === undefined);
+  nations[i].status.textContent = v !== undefined ? `${fmt(v)} m³/s → ${short(row.arrival_date)}` : `not yet in river for ${row ? short(row.arrival_date) : "date"}`;
+}
+
+function applyDate(k) {
+  const rows = combined();
+  if (!rows.length) return;
+  state.dateIdx = Math.max(0, Math.min(rows.length - 1, k));
+  const row = rows[state.dateIdx];
+  $("scrub").value = String(state.dateIdx);
+  tickEls.forEach((t, j) => t.classList.toggle("cur", j === state.dateIdx));
+  const maxShare = Math.max(...Object.values(row.by_nation_m3s || {}), 1);
+  rivers.forEach((r, i) => {
+    const v = (row.by_nation_m3s || {})[nameOf(i)];
+    r.g.classList.toggle("dry", v === undefined);
+    r.path.style.strokeWidth = v === undefined ? "" : String(3 + 7 * (v / maxShare));
+    showShared(i);
+  });
+  bd.g.classList.add("known");
+  bd.g.classList.toggle("flood", !!row.above_danger);
+  bd.g.classList.toggle("partial", !row.complete);
+  bd.sub.textContent = row.complete
+    ? `${short(row.arrival_date)} · all ${row.nations_reporting} nations`
+    : `${short(row.arrival_date)} · lower bound, ${row.nations_reporting}/${N().length} reporting`;
+  bd.val.textContent = `${row.complete ? "" : "≥ "}${fmt(row.combined_inflow_m3s)} m³/s ${row.above_danger ? "— FLOOD" : ""}`.trim();
+  document.querySelectorAll("#panel .orow").forEach((el) => el.classList.toggle("cur", Number(el.dataset.k) === state.dateIdx));
+  $("caption").textContent = captionText();
+}
+
+function captionText() {
+  if (state.mode === "solo") {
+    return state.selected === null
+      ? "Each nation sees only its own river. Click one to see what it knows."
+      : `Viewing ${nameOf(state.selected)}'s private analysis. It cannot see the other rivers.`;
+  }
+  if (!state.fedDone) return "Each nation's signal is travelling to the coordinator...";
+  if (state.selected !== null) return `${nameOf(state.selected)}'s signal, as the coordinator received it.`;
+  const row = rowAt(state.dateIdx);
+  if (!row) return "Coordinator view.";
+  return row.complete
+    ? `Water reaching ${downstream()} on ${short(row.arrival_date)}: ${fmt(row.combined_inflow_m3s)} m³/s from all ${row.nations_reporting} rivers.`
+    : `${short(row.arrival_date)}: at least ${fmt(row.combined_inflow_m3s)} m³/s. Only ${row.nations_reporting} of ${N().length} nations' water is in view yet.`;
+}
+
+function applyMap() {
+  const fed = state.mode === "fed";
+  nations.forEach((n, i) => {
+    n.g.classList.toggle("selected", state.selected === i);
+    n.g.classList.toggle("fogged", !fed && state.selected !== null && state.selected !== i);
+    if (!fed) revealNation(i, state.selected === i);
+  });
+  $("caption").textContent = captionText();
+  $("mode-solo").setAttribute("aria-selected", String(!fed));
+  $("mode-fed").setAttribute("aria-selected", String(fed));
+}
+
+function resetVisuals() {
+  map().classList.remove("fed", "warned", "racing", "raced");
+  $("packets-layer").innerHTML = "";
+  $("pulses-layer").innerHTML = "";
+  hub.g.classList.remove("on");
+  hub.count.textContent = `0/${N().length}`;
+  nations.forEach((n, i) => { n.g.classList.remove("sending", "selected", "fogged"); revealNation(i, false); });
+  rivers.forEach((r) => { r.g.classList.remove("dry"); r.path.style.strokeWidth = ""; });
+  bd.g.classList.remove("known", "flood", "partial", "pulse");
+  bd.sub.textContent = "downstream";
+  bd.val.textContent = "can't see upstream rivers";
+  tickEls.forEach((t) => t.classList.remove("cur"));
+  $("scrub").disabled = true;
+  $("scrubber").classList.remove("on");
+}
+
+// ---------------------------------------------------------------- animation
+function flyAlong(path, cls, ms, alive, reverse) {
+  const L = path.getTotalLength();
+  const dot = svgEl("g", { class: `packet ${cls || ""}` }, $("packets-layer"));
+  svgEl("circle", { class: "pulse", r: 12 }, dot);
+  svgEl("circle", { r: 5.5 }, dot);
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    const D = REDUCED ? 10 : ms;
+    const step = (now) => {
+      if (!alive()) { dot.remove(); resolve(); return; }
+      const p = Math.min(1, (now - t0) / D);
+      const pt = path.getPointAtLength(L * (reverse ? 1 - ease(p) : ease(p)));
+      dot.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
+      if (p < 1) frame(step); else { dot.remove(); resolve(); }
+    };
+    frame(step);
+  });
+}
+
+/**
+ * Replay the water that reaches Bangladesh on the warning date. Each river's
+ * slug leaves on (arrival date - travel_days) -- the dated reading the nation's
+ * projected_inflow_m3s maps to that arrival date -- and all meet on arrival.
+ * Blob size is proportional to that nation's by_nation_m3s. Clock speed is illustrative.
+ */
+function raceWater(k, alive) {
+  const row = rowAt(k);
+  if (!row) return Promise.resolve();
+  const arrive = dayNum(row.arrival_date);
+  const asOf = state.run.as_of;
+  const legs = N().map((n, i) => ({ i, v: (row.by_nation_m3s || {})[n.country], days: n.travel_days }))
+    .filter((l) => l.v !== undefined && l.days);
+  if (!legs.length) return Promise.resolve();
+  const start = arrive - Math.max(...legs.map((l) => l.days));
+  const maxV = Math.max(...legs.map((l) => l.v));
+  const blobs = legs.map((l) => {
+    const g = svgEl("g", { class: "pulse-dot" }, $("pulses-layer"));
+    const r = 7 + 11 * Math.sqrt(l.v / maxV);
+    svgEl("circle", { r: r * 1.9, fill: colorOf(l.i), "fill-opacity": ".18" }, g);
+    svgEl("circle", { r, fill: colorOf(l.i), "fill-opacity": ".9", stroke: "#dff3ff", "stroke-width": "1.5" }, g);
+    g.style.opacity = "0";
+    return { ...l, g, leave: arrive - l.days };
+  });
+  map().classList.add("racing");
+  $("caption").textContent = `Replaying the water that reaches ${downstream()} on ${short(row.arrival_date)}, river by river.`;
+  $("clock-k").textContent = `Water reaching ${downstream()} on ${short(row.arrival_date)}`;
+  const PER_DAY = 1150;
+  const total = (arrive - start) * PER_DAY;
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    const D = REDUCED ? 10 : total;
+    const step = (now) => {
+      if (!alive()) { blobs.forEach((b) => b.g.remove()); resolve(); return; }
+      const p = Math.min(1, (now - t0) / D);
+      const day = start + p * (arrive - start);
+      const di = Math.min(Math.floor(day + 1e-6), arrive);
+      const iso = isoOf(di);
+      $("clock-d").textContent = short(iso);
+      $("clock-t").textContent = iso === asOf ? "today (briefing date)" : iso > asOf ? "arrival" : "";
+      blobs.forEach((b) => {
+        const f = (day - b.leave) / b.days;
+        const r = rivers[b.i];
+        if (f < 0) { b.g.style.opacity = "0"; return; }
+        const pt = r.path.getPointAtLength(r.len * Math.min(1, f));
+        b.g.style.opacity = "1";
+        b.g.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
+      });
+      if (p < 1) frame(step);
+      else { blobs.forEach((b) => b.g.remove()); resolve(); }
+    };
+    frame(step);
+  });
+}
+
+// ---------------------------------------------------------------- flows
+function toSolo() {
+  state.token += 1;
+  state.busy = false;
+  state.mode = "solo";
+  state.selected = null;
+  state.fedDone = false;
+  state.received = 0;
+  resetVisuals();
+  applyMap();
+  renderPanel();
+}
+
+async function combine() {
+  if (state.busy) return;
+  state.token += 1;
+  const my = state.token;
+  const alive = () => my === state.token;
+  state.busy = true;
+  resetVisuals();
+  state.mode = "fed";
+  state.selected = null;
+  state.fedDone = false;
+  state.received = 0;
+  map().classList.add("fed");
+  applyMap();
+  renderPanel();
+
+  await sleep(350);
+  if (!alive()) return;
+  for (let i = 0; i < nations.length; i += 1) {
+    nations[i].g.classList.add("sending");
+    await flyAlong(links[i], "", 950, alive);
+    if (!alive()) return;
+    nations[i].g.classList.remove("sending");
+    nations[i].g.classList.add("shared");
+    const keys = Object.keys(sharesOf(i));
+    nations[i].status.textContent = keys.length ? `shared ${keys.length} arrival date${keys.length > 1 ? "s" : ""}` : "shared";
+    state.received += 1;
+    hub.count.textContent = `${state.received}/${nations.length}`;
+    const row = $(`prog-${i}`);
+    if (row) { row.classList.add("done"); row.querySelector(".mark").textContent = "✓"; }
+    await sleep(220);
+    if (!alive()) return;
+  }
+  hub.g.classList.add("on");
+  await sleep(450);
+  if (!alive()) return;
+
+  const w = warnIdx();
+  const k = w >= 0 ? w : 0;
+  const pr = $("prog-race");
+  if (pr) pr.classList.add("done");
+  await raceWater(k, alive);
+  if (!alive()) return;
+  map().classList.remove("racing");
+  map().classList.add("raced");
+  applyDate(k);
+  if (w >= 0) {
+    await flyAlong(links.warn, "warn", 900, alive);
+    if (!alive()) return;
+    map().classList.add("warned");
+    bd.g.classList.add("pulse");
+  }
+  $("scrubber").classList.add("on");
+  $("scrub").disabled = false;
+  state.fedDone = true;
+  state.busy = false;
+  applyMap();
+  renderPanel();
+}
+
+async function autoDemo() {
+  toSolo();
+  const my = state.token;
+  await sleep(700);
+  for (let i = 0; i < nations.length; i += 1) {
+    if (my !== state.token) return;
+    state.selected = i;
+    applyMap();
+    renderPanel();
+    await sleep(3900);
+  }
+  if (my !== state.token) return;
+  state.selected = null;
+  applyMap();
+  renderPanel();
+  await sleep(1400);
+  if (my !== state.token) return;
+  await combine();
+  const tok = state.token;
+  await sleep(5200);
+  // Step through the later (partial) dates, then return to the warning date.
+  const rows = combined();
+  const w = Math.max(0, warnIdx());
+  for (let k = 0; k < rows.length; k += 1) {
+    if (k === w) continue;
+    if (tok !== state.token) return;
+    applyDate(k);
+    await sleep(2000);
+  }
+  if (tok !== state.token) return;
+  applyDate(w);
+}
+
+function onNation(i) {
+  if (state.busy) return;
+  state.token += 1; // a manual click cancels a running auto demo
+  state.selected = state.selected === i ? null : i;
+  applyMap();
+  renderPanel();
+}
+
+// ---------------------------------------------------------------- panel views
+function chip(i) {
+  const n = N()[i];
+  const p = typeof n.pct_of_local_danger === "number" ? ` <small>${Math.round(n.pct_of_local_danger)}%</small>` : "";
+  return `<button class="chip" type="button" data-nation="${i}"><i style="background:${colorOf(i)}"></i>${esc(nameOf(i))}${p}</button>`;
+}
+
+function introView() {
+  const noneAlert = N().every((n) => n.local_alert === 0);
+  return `
+    <h2>Five nations. Five private rivers.</h2>
+    <p class="lead">Each nation's agent reads only its own river gauges and shares one derived number: the flow already
+      in its river, projected to the date it reaches ${esc(downstream())}. Click a nation to see what it knows on its own.</p>
+    <div class="chips">${nations.map((_, i) => chip(i)).join("")}</div>
+    <p class="hint">${noneAlert ? "Percent of each nation's own local danger level, as of " + esc(long(state.run.as_of)) + ". None has raised a local alert." : ""}</p>
+    <div class="quote">Nepal couldn't see what was coming from upstream. Sentinel makes sure ${esc(downstream())} can.</div>
+    <div class="btn-row"><button class="btn" type="button" data-action="combine">Combine signals &rarr;</button></div>`;
+}
+
+function meter(label, value, cls) {
+  return `<div class="meter"><span>${label}</span><div class="bar"><i class="${cls}" data-w="${pct(value)}"></i></div><b>${pct(value)}%</b></div>`;
+}
+
+function nationView(i) {
+  const n = N()[i];
+  const s = signalOf(i);
+  const ok = typeof s.severity === "number" && s.anomaly_type !== "unparsed";
+  const shares = Object.entries(sharesOf(i));
+  const pctDanger = n.pct_of_local_danger;
+
+  const local = typeof pctDanger === "number" ? `
+    <div class="local">
+      <div class="stat-row">
+        <div class="stat"><span>Own local danger level</span><b class="amber">${esc(pctDanger)}%</b></div>
+        <div class="stat"><span>Local alert</span><b class="ok">${n.local_alert ? "RAISED" : "none (0)"}</b></div>
+      </div>
+      <div class="dgauge"><div class="lbl"><span>Discharge vs ${esc(n.country)}'s own danger level</span><span>100%</span></div>
+        <div class="track"><i data-w="${Math.min(100, pctDanger)}"></i><em></em></div></div>
+    </div>` : "";
+
+  const signal = ok ? `
+    <dl class="signal">
+      <div><dt>Anomaly</dt><dd>${esc(s.anomaly_type)}</dd></div>
+      <div><dt>Trend</dt><dd>${esc(s.trend_vector)}</dd></div>
+    </dl>
+    ${meter("Local risk", s.severity, "mid")}
+    ${meter("Confidence", s.confidence, "")}`
+    : `<p class="hint">This nation's agent produced no usable assessment. The coordinator treats that as a data gap, not as zero risk.</p>`;
+
+  const shareRows = shares.map(([d, v]) => `<tr><td>arrives ${esc(short(d))}</td><td>${esc(fmt(v))} m&sup3;/s</td></tr>`).join("");
+  const others = N().length - 1;
+  const buttons = state.mode === "solo"
+    ? `<button class="btn" type="button" data-action="combine">Combine signals &rarr;</button>
+       <button class="btn secondary" type="button" data-action="deselect">Back</button>`
+    : `<button class="btn secondary" type="button" data-action="deselect">&larr; Back to verdict</button>`;
+
+  return `
+    <div class="head-row"><h2>${esc(n.country)}</h2><span class="tag">${state.mode === "solo" ? "private analysis" : "as received"}</span></div>
+    <p class="sub-line"><b>${esc(n.river || "")}</b>${n.travel_hours ? ` &middot; ~${esc(n.travel_hours)} h to reach ${esc(downstream())}` : ""}</p>
+    ${local}
+    <p class="narr" id="narr"></p>
+    ${signal}
+    <div class="receipt">
+      <div><span>&#128274; Stays private</span><b>${PRIVATE_KINDS}</b></div>
+      <div class="sent"><span>&#10142; Shares</span><div><b>local assessment + projected inflow into ${esc(downstream())}</b>
+        ${shareRows ? `<table class="shares">${shareRows}</table>` : ""}</div></div>
+    </div>
+    <div class="alone"><strong>Can ${esc(n.country)} see ${esc(downstream())}'s flood?</strong>
+      <p>No. Its own river is ${typeof pctDanger === "number" ? `at ${esc(pctDanger)}% of its local danger level` : "below its local danger level"}${n.local_alert === 0 ? " and no local alert fires" : ""}.
+      It has no view of the other ${others} rivers that meet it downstream.</p></div>
+    <div class="btn-row">${buttons}</div>`;
+}
+
+function progressView() {
+  const rows = nations.map((_, i) => {
+    const keys = Object.keys(sharesOf(i));
+    const span = keys.length ? ` for ${short(keys[0])}${keys.length > 1 ? `–${short(keys[keys.length - 1])}` : ""}` : "";
+    return `
+    <li id="prog-${i}" class="${i < state.received ? "done" : ""}">
+      <span class="mark">${i < state.received ? "✓" : ""}</span>${esc(nameOf(i))}: projected inflow${esc(span)}
+    </li>`;
+  }).join("");
+  return `
+    <h2>Coordinator is receiving signals</h2>
+    <p class="lead">Only derived signals cross the border. Watch what arrives.</p>
+    <ul class="prog">${rows}
+      <li id="prog-race"><span class="mark">&#8776;</span>Sum inflow by arrival date in ${esc(downstream())}</li>
+    </ul>
+    <p class="hint">The coordinator never sees a single rainfall, soil-moisture, snowmelt or river-level reading.</p>`;
+}
+
+function stackBar(row, big) {
+  const max = barMax();
+  const segs = Object.entries(row.by_nation_m3s || {}).map(([c, v]) => {
+    const i = N().findIndex((n) => n.country === c);
+    return `<i style="background:${i >= 0 ? colorOf(i) : "#8fa3c7"}" data-w="${((v / max) * 100).toFixed(2)}" title="${esc(c)}: ${esc(fmt(v))} m³/s"></i>`;
+  }).join("");
+  const thr = (threshold() / max) * 100;
+  return `<div class="stack${big ? " big" : ""}"><div class="bars">${segs}</div>
+    <div class="thr" style="left:${thr.toFixed(2)}%">${big ? `<span>${esc(fmt(threshold()))} flood threshold</span>` : ""}</div></div>`;
+}
+
+function verdictView() {
+  const c = state.run.coordinator;
+  const w = warnIdx();
+  const rows = combined();
+  const row = rows[w >= 0 ? w : 0];
+  const lead = w >= 0 ? dayNum(row.arrival_date) - dayNum(state.run.as_of) : null;
+  const badge = w >= 0
+    ? `<div class="verdict-badge"><span>Flood warning</span><strong>${esc(downstream())}</strong>
+        <small>for ${esc(long(row.arrival_date))} &middot; ${lead} day${lead === 1 ? "" : "s"} lead time from ${esc(short(state.run.as_of))}</small></div>`
+    : `<div class="verdict-badge clear"><span>No flood warning</span><strong>${esc(downstream())}</strong></div>`;
+  const diff = row.combined_inflow_m3s - threshold();
+  const keys = Object.entries(row.by_nation_m3s || {}).map(([cn, v]) => {
+    const i = N().findIndex((n) => n.country === cn);
+    return `<div><i style="background:${i >= 0 ? colorOf(i) : "#8fa3c7"}"></i>${esc(cn)}<b>${esc(fmt(v))}</b></div>`;
+  }).join("");
+  const outlook = rows.map((r, k) => `
+    <button type="button" class="orow${r.above_danger ? " flood" : ""}${k === state.dateIdx ? " cur" : ""}" data-k="${k}">
+      <span class="dt">${esc(short(r.arrival_date))}</span>
+      ${stackBar(r, false)}
+      <span class="v">${r.complete ? "" : "&ge; "}${esc(fmt(r.combined_inflow_m3s))}
+        <small>${r.complete ? (r.above_danger ? "above threshold" : "all reporting") : `lower bound &middot; ${r.nations_reporting}/${N().length}`}</small></span>
+    </button>`).join("");
+  const noAlert = N().every((n) => n.local_alert === 0);
+  return `
+    <h2>Regional Flood Early Warning Coordinator</h2>
+    ${badge}
+    <div class="total"><b>${esc(fmt(row.combined_inflow_m3s))} m&sup3;/s</b>
+      <span>combined inflow on ${esc(short(row.arrival_date))} vs ${esc(fmt(threshold()))} m&sup3;/s threshold (${diff >= 0 ? "+" : ""}${esc(fmt(diff))})</span></div>
+    ${stackBar(row, true)}
+    <div class="keys">${keys}</div>
+    <div class="outlook"><h4>Outlook by arrival date</h4>${outlook}
+      <p class="hint">&ge; marks a lower bound: some nations' water for that date has not entered their rivers yet, so more will still arrive.</p></div>
+    <div class="punch">
+      <div class="chips">${nations.map((_, i) => chip(i)).join("")}</div>
+      <p>${noAlert ? `<b>No nation raised a local alert.</b> Every river is below its own danger level; the flood only appears when all ${N().length} are added together.` : ""}</p>
+    </div>
+    <p class="narr" id="vnarr"></p>
+    <div class="reco"><h4>Coordinated recommendation</h4><p>${esc(c.recommendation)}</p></div>
+    <div class="quote">Nepal couldn't see what was coming from upstream. Sentinel makes sure ${esc(downstream())} can.</div>
+    <div class="btn-row">
+      <button class="btn" type="button" data-action="combine">&#8635; Replay</button>
+      <button class="btn secondary" type="button" data-action="solo">See each nation alone</button>
+    </div>`;
+}
+
+function renderPanel() {
+  let html, view;
+  if (state.mode === "solo") {
+    view = state.selected === null ? "intro" : "nation";
+    html = view === "intro" ? introView() : nationView(state.selected);
+  } else if (state.selected !== null) {
+    view = "nation";
+    html = nationView(state.selected);
+  } else if (state.fedDone) {
+    view = "verdict";
+    html = verdictView();
+  } else {
+    view = "progress";
+    html = progressView();
+  }
+  $("panel").innerHTML = `<div class="view">${html}</div>`;
+  frame(() => {
+    document.querySelectorAll("#panel [data-w]").forEach((el) => { el.style.width = `${el.dataset.w}%`; });
+  });
+  if (view === "nation") typeInto($("narr"), N()[state.selected].narrative);
+  if (view === "verdict") typeInto($("vnarr"), state.run.coordinator.narrative);
+}
+
+// ---------------------------------------------------------------- wiring
+function bind() {
+  $("panel").addEventListener("click", (e) => {
+    const nat = e.target.closest("[data-nation]");
+    if (nat) { onNation(Number(nat.dataset.nation)); return; }
+    const orow = e.target.closest(".orow");
+    if (orow && state.fedDone) { state.token += 1; applyDate(Number(orow.dataset.k)); return; }
+    const act = e.target.closest("[data-action]");
+    if (!act) return;
+    const a = act.dataset.action;
+    if (a === "combine") combine();
+    if (a === "solo") toSolo();
+    if (a === "deselect") { state.selected = null; applyMap(); renderPanel(); }
+  });
+  $("mode-solo").addEventListener("click", toSolo);
+  $("mode-fed").addEventListener("click", () => { if (state.mode !== "fed") combine(); });
+  $("reset-btn").addEventListener("click", toSolo);
+  $("demo-btn").addEventListener("click", autoDemo);
+  $("scrub").addEventListener("input", (e) => { state.token += 1; applyDate(Number(e.target.value)); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !state.busy && state.selected !== null) { state.selected = null; applyMap(); renderPanel(); }
+  });
+}
+
+async function init() {
+  try {
+    const { run, source } = await loadRun();
+    if (!run || !Array.isArray(run.nations) || !run.nations.length || !run.coordinator || !Array.isArray(run.combined)) {
+      throw new Error("run file must contain nations, combined and a coordinator (re-export with scripts/export_transcript.py)");
+    }
+    state.run = run;
+    const label = source === "file" ? "Replaying a captured SuperGrid run" : "Replaying a captured SuperGrid run (built-in copy)";
+    $("source-note").textContent = `${label} · briefing as of ${run.as_of}${run.prompt ? ` · prompt: "${run.prompt}"` : ""}`;
+  } catch (err) {
+    $("panel").innerHTML = `<div class="view"><h2>Could not load the run</h2><p class="lead">${esc(err.message)}</p>
+      <p class="hint">Serve this folder with: python3 -m http.server 8000</p></div>`;
+    $("source-note").textContent = "No data";
+    return;
+  }
+  buildMap();
+  bind();
+  toSolo();
+  if (/[?&]autoplay\b/.test(location.search)) autoDemo();
+  const m = location.search.match(/[?&]view=(\w+)/);
+  const d = location.search.match(/[?&]date=(\d)/);
+  if (m && m[1] === "verdict") combine().then(() => { if (d && state.fedDone) applyDate(Number(d[1])); });
+  const sel = location.search.match(/[?&]nation=(\d)/);
+  if (sel) onNation(Number(sel[1]));
+}
+
+init();
+</script>
 </body>
 </html>

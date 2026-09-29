@@ -21,6 +21,7 @@ from openai import OpenAI
 from agent.data import LOCAL_SENSOR_DATA, NATION_ORDER
 
 MODEL = "openai/gpt-5.6-sol"
+DEFAULT_PROMPT = "Brief me on current conditions."
 
 app = AgentApp()
 
@@ -106,6 +107,7 @@ def main(agent: AgentSession, context: Context) -> None:
         api_key=os.environ["FLWR_RUNTIME_API_KEY"],
         max_retries=0,
     )
+    prompt = agent.prompt or DEFAULT_PROMPT
 
     signals: list[dict[str, Any]] = []
     for country in NATION_ORDER:
@@ -118,7 +120,7 @@ def main(agent: AgentSession, context: Context) -> None:
                 client,
                 agent,
                 instructions=instructions,
-                input_text=agent.prompt,
+                input_text=prompt,
             )
             signal = _extract_json_block(text)
         except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
@@ -137,6 +139,6 @@ def main(agent: AgentSession, context: Context) -> None:
         client,
         agent,
         instructions=COORDINATOR_INSTRUCTIONS.format(signals=json.dumps(signals, indent=2)),
-        input_text=agent.prompt,
+        input_text=prompt,
     )
     print(coordinator_text)

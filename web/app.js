@@ -95,7 +95,7 @@ async function runReplay(run) {
   verdictEl.classList.add("active");
   const c = run.coordinator;
   verdictBodyEl.innerHTML = `
-    <span class="most-impacted">Most impacted next: ${c.most_impacted}</span>
+    <span class="most-impacted">Hardest hit: ${c.most_impacted}</span>
     <p class="narrative"><span class="typed-verdict"></span></p>
     <p class="recommendation">${c.recommendation}</p>
   `;

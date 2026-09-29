@@ -29,6 +29,22 @@ signals, never raw data, and from the combination alone predicts which nation
 gets hit hardest next. Punchline: no single nation's own data predicts the
 outcome — only the federated combination does.
 
+## Opening line for the demo (use this, don't improvise a substitute)
+
+"Five weeks ago, a glacial lake outburst flood on the Nepal-Tibet border
+killed over 1,400 people. A central factor: one side held glacial and river
+data it treats as strategically sensitive, and didn't share it with the other
+side in time. Sentinel is what solving that failure mode looks like — without
+asking anyone to hand over their sensitive raw data."
+
+Then transition to the fictional Doria/Kessa/Averlyn scenario to show the
+mechanism live. Be explicit in the pitch that the demo scenario is fictional
+and we are not making claims about the real, still-unfolding Nepal-Tibet
+situation or the countries involved — see README.md "Why this matters right
+now" for the citations and the exact wording we've agreed on. Everyone on the
+team should use that wording verbatim if asked about it by judges; don't
+freelance a stronger or more specific claim about the real event.
+
 ## Why there's frontend work at all
 
 Flower Chat (the built-in UI) will show the raw streamed transcript, which is

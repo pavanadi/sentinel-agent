@@ -6,10 +6,15 @@ runs/run-<id>.json.
 
 Usage (from the repo root, after `uv run flwr login supergrid`):
     uv run python scripts/run_once.py "Brief me on river conditions for Bangladesh."
+
+    # Ask a published agent on a federation instead of the local app:
+    uv run python scripts/run_once.py --app @flwrlabs/collaborative-agent \\
+        --federation @pavanadi/nepal-flood-2026 "Has any node raised a local alert?"
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -26,19 +31,29 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def main() -> None:
-    prompt = " ".join(sys.argv[1:]) or "Brief me on river conditions for Bangladesh."
+    parser = argparse.ArgumentParser()
+    parser.add_argument("prompt", nargs="*")
+    parser.add_argument("--app", help="published app spec, e.g. @flwrlabs/collaborative-agent (default: this repo)")
+    parser.add_argument("--federation", help="e.g. @pavanadi/nepal-flood-2026 (default: personal)")
+    args = parser.parse_args()
+    prompt = " ".join(args.prompt) or "Brief me on river conditions for Bangladesh."
+
     connection = read_superlink_connection(os.environ.get("FLWR_CHAT_SUPERLINK", "supergrid"))
     client = init_http_client_from_connection(connection)
-    local_agent = build_local_agent(REPO_ROOT)
+    if args.app:
+        app_spec, fab_hash, fab_content = args.app, None, None
+    else:
+        local_agent = build_local_agent(REPO_ROOT)
+        app_spec, fab_hash, fab_content = local_agent.app_spec, local_agent.fab_hash, local_agent.fab_content
     try:
         run_id, _ = start_chat_run(
             client,
             prompt,
-            connection.federation,
+            args.federation or connection.federation,
             None,
-            local_agent.app_spec,
-            local_agent.fab_hash,
-            local_agent.fab_content,
+            app_spec,
+            fab_hash,
+            fab_content,
         )
         print(f"run_id={run_id}", file=sys.stderr)
 

@@ -1,0 +1,55 @@
+{
+  "prompt": "A tropical cyclone is active in the region. Brief me.",
+  "nations": [
+    {
+      "country": "Doria",
+      "narrative": "Landfall occurred near the capital four hours ago. Pressure has begun rising and winds easing as the system moves offshore to the west. Rainfall totals remain high but are trending down from their peak. Coastal damage assessments are underway; the immediate danger here is receding.",
+      "signal": {
+        "country": "Doria",
+        "severity": 0.55,
+        "anomaly_type": "post-landfall weakening system",
+        "trend_vector": "pressure rising, wind easing, moving west",
+        "confidence": 0.82,
+        "key_evidence": [
+          "Pressure rose from 978 to 982 hPa over 6 hours",
+          "Wind speed eased from 155 to 145 km/h"
+        ]
+      }
+    },
+    {
+      "country": "Kessa",
+      "narrative": "No landfall yet, but pressure has fallen steadily and wind speed has more than doubled over the last twelve hours. Coastal fishing fleets have been advised to return to harbor. Conditions are consistent with an approaching system rather than a departing one.",
+      "signal": {
+        "country": "Kessa",
+        "severity": 0.68,
+        "anomaly_type": "intensifying approach",
+        "trend_vector": "pressure falling, wind rising sharply",
+        "confidence": 0.79,
+        "key_evidence": [
+          "Pressure fell from 1006 to 994 hPa over 12 hours",
+          "Wind speed rose from 35 to 80 km/h over the same window"
+        ]
+      }
+    },
+    {
+      "country": "Averlyn",
+      "narrative": "Skies are clear and seas are calm. The one unusual reading is sea-surface temperature, which is well above seasonal average and has been rising for three consecutive readings. No other indicators are currently elevated.",
+      "signal": {
+        "country": "Averlyn",
+        "severity": 0.22,
+        "anomaly_type": "anomalous sea-surface warming",
+        "trend_vector": "sea-surface temperature rising, all else calm",
+        "confidence": 0.65,
+        "key_evidence": [
+          "Sea-surface temperature rose from 30.1 to 31.2 C over 12 hours",
+          "No pressure or wind anomaly detected locally"
+        ]
+      }
+    }
+  ],
+  "coordinator": {
+    "narrative": "Doria's own data suggests the danger there is receding, and Kessa's data alone suggests a moderate approaching storm. Neither nation's own signal points to Averlyn as the greatest concern. But combined, the pattern is clear: the system is moving west along the same track as Doria-to-Kessa, and Averlyn sits directly ahead of it over water that is anomalously warm and still warming -- the exact condition that lets a weakening system re-intensify. No single nation's own signal shows this; it only emerges from comparing all three.",
+    "most_impacted": "Averlyn",
+    "recommendation": "Averlyn should activate coastal preparedness now, not wait for local conditions to change. Kessa should share its next sensor reading with Averlyn as soon as it's available, since Kessa's trend is the earliest confirmation of the storm's continued westward track."
+  }
+}

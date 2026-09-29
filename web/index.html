@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sentinel -- Federated Cyclone Early Warning</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="page-header">
+    <h1>Sentinel</h1>
+    <p class="subtitle">Federated cross-border cyclone early warning -- private local data, shared insight only.</p>
+  </header>
+
+  <main>
+    <section class="nations" id="nations">
+      <!-- One .nation-card per nation is rendered here by app.js -->
+    </section>
+
+    <div class="signal-flow" aria-hidden="true">
+      <span>only anonymized signals cross this line -- never raw sensor data</span>
+    </div>
+
+    <section class="verdict" id="verdict">
+      <h2>Regional Early Warning Coordinator</h2>
+      <p class="verdict-hint">Sees only the three signals above. Never raw data from any nation.</p>
+      <div class="verdict-body" id="verdict-body">
+        <p class="placeholder">Waiting for all nation reports...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <button id="replay-btn" type="button">Replay</button>
+    <span class="source-note" id="source-note">Replaying a captured run</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -4,7 +4,24 @@ This uses Flower's **local SuperLink** dev loop, not SuperGrid — no
 `flwr login supergrid` needed for this part. Much faster for iterating on
 prompts. FS-2 handles the actual SuperGrid/Hub deployment once this is stable.
 
-## 1. Scaffold + merge (one-time)
+## 0. Fast path (this repo already builds — verified with flwr 1.39.0)
+
+```console
+$ git clone https://github.com/pavanadi/sentinel-agent && cd sentinel-agent
+$ uv sync --python 3.11 --no-install-package uv
+$ uv run flwr build
+```
+
+`--no-install-package uv` skips a 17.5 MB wheel that `flwr` depends on. On
+the venue wifi it downloads at ~55 KB/s and `uv sync` times out. You already
+have the `uv` binary, so skipping it is harmless. Always use `uv run flwr ...`
+from inside the project (not a global/other venv's `flwr`) so the CLI and
+SuperLink versions match. If it complains about `VIRTUAL_ENV`, run
+`deactivate` first.
+
+If this works, skip step 1.
+
+## 1. Scaffold + merge (only if the fast path fails)
 
 ```console
 $ uvx --from flwr flwr new @flwrlabs/agent

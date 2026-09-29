@@ -58,7 +58,7 @@ add `data/real-run.json` and change `DATA_URL` in `app.js`).
 - [ ] Visual polish pass (spacing, typography, color contrast at a distance —
       test on the venue's projector if possible)
 - [ ] Optional: simple map/arrow motif showing the five rivers converging on
-      the Calderune delta, if time allows
+      Bangladesh, if time allows
 - [ ] Optional stretch: a toggle to pull a live run's events instead of the
       static replay, only if FS-2 exposes a way to read run events and only
       as a fallback-safe addition (replay must still work if this breaks)

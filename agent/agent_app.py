@@ -1,10 +1,10 @@
 """Sentinel: federated cross-border flood early warning.
 
-Five upstream nations each monitor one river that drains into the delta
-nation Calderune. Each nation's agent reads only its own gauge data and shares
-one derived signal: its flow, projected to the day it reaches the delta.
+Five upstream countries each monitor one river that drains into
+Bangladesh. Each nation's agent reads only its own gauge data and shares
+one derived signal: its flow, projected to the day it reaches Bangladesh.
 Rainfall, soil moisture, gauge levels and history never leave the nation.
-The coordinator sums those projections and warns Calderune -- even though no
+The coordinator sums those projections and warns Bangladesh -- even though no
 upstream nation's own data ever crosses its local alert threshold.
 """
 
@@ -152,11 +152,11 @@ object in a fenced ```json code block as the very last thing in your response
 """
 
 COORDINATOR_INSTRUCTIONS = """You are the Regional Flood Early Warning Coordinator
-for the {downstream} delta. Today is {as_of}.
+for {downstream}. Today is {as_of}.
 
 You have NEVER seen any nation's gauge data. Each upstream nation shared only
 its own local assessment and the flow already in its river, projected to the
-date it will reach the delta.
+date it will reach {downstream}.
 
 Public hydrology:
 {geography}
@@ -164,7 +164,7 @@ Public hydrology:
 Nation signals:
 {signals}
 
-Combined projected delta inflow (computed exactly; do not recompute). Dates
+Combined projected inflow into {downstream} (computed exactly; do not recompute). Dates
 with fewer than {n} nations reporting are lower bounds -- more water will
 still arrive:
 {combined}

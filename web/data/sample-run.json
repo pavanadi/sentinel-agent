@@ -1,85 +1,85 @@
 {
-  "prompt": "Brief me on river conditions for the Calderune delta.",
+  "prompt": "Brief me on river conditions for Bangladesh.",
   "nations": [
     {
-      "country": "Kaldor",
-      "narrative": "As of 2026-07-03, discharge reached 8,557 m³/s, or 77.8% of Kaldor’s local danger level, so flood risk is elevated but remains below the danger threshold. River level rose to 8.38 m as rainfall increased to 111.7 mm and soil moisture reached 80.7%. Discharge has climbed for four consecutive days, although the local alert remains inactive.",
+      "country": "China",
+      "narrative": "As of 2026-07-03, discharge reached 8,557 m³/s, or 77.8% of China’s local danger level of 11,000 m³/s; no local alert was active. River level rose from 5.99 m on 2026-06-27 to 8.38 m, while daily rainfall increased from 37.8 mm to 111.7 mm. Conditions are elevated and rising, but remain below China’s local danger threshold.",
       "signal": {
-        "country": "Kaldor",
+        "country": "China",
         "severity": 0.78,
-        "anomaly_type": "rapid high-flow rise",
+        "anomaly_type": "elevated rising flow",
         "trend_vector": "rainfall, river level, and discharge rising",
         "confidence": 0.98,
         "key_evidence": [
-          "Discharge is 8557 m3/s, 77.8% of local danger",
-          "River level rose to 8.38 m amid 111.7 mm rainfall"
+          "Discharge at 8557 m3/s, 77.8% of local danger",
+          "River level rose from 5.99 m to 8.38 m in seven days"
         ]
       }
     },
     {
-      "country": "Torvia",
-      "narrative": "As of 2026-07-03, Tor river discharge was 6,553 m³/s, or 72.8% of Torvia’s local danger level, with no local alert active. Discharge declined from 6,940 m³/s on July 2, but remained elevated after rising substantially over the week. Record-period rainfall reached 112.8 mm and soil moisture was high at 76.2%, warranting close local monitoring.",
+      "country": "Nepal",
+      "narrative": "As of 2026-07-03, Koshi discharge was 6,553 m³/s, or 72.8% of Nepal’s local danger level, with no local alert active. Discharge eased from 6,940 m³/s on 2026-07-02, although rainfall increased to 112.8 mm and soil moisture reached 76.2%. Local flood risk is elevated but remains below Nepal’s danger threshold.",
       "signal": {
-        "country": "Torvia",
+        "country": "Nepal",
         "severity": 0.73,
-        "anomaly_type": "elevated river flow",
-        "trend_vector": "rainfall rising while discharge eased from its peak",
-        "confidence": 0.94,
+        "anomaly_type": "elevated flow below danger",
+        "trend_vector": "flow eased after rising while rainfall increased",
+        "confidence": 0.98,
         "key_evidence": [
-          "Discharge at 72.8% of local danger level",
+          "Discharge at 72.8% of Nepal's local danger level",
           "Rainfall rose to 112.8 mm with 76.2% soil moisture"
         ]
       }
     },
     {
-      "country": "Brenholt",
-      "narrative": "As of 2026-07-03, discharge was 21,152 m³/s, or 70.5% of Brenholt’s local danger level, with no local alert active. River level and discharge declined from 8.50 m and 23,244 m³/s on 2026-07-02 to 7.65 m and 21,152 m³/s. Conditions remain elevated because daily rainfall reached 111.6 mm and soil moisture remained high at 80.0%.",
+      "country": "India",
+      "narrative": "As of 2026-07-03, Ganga discharge was 21,152 m³/s, or 70.5% of India’s local danger level, with no local alert active. River level and discharge declined from 8.50 m and 23,244 m³/s on 2026-07-02 to 7.65 m and 21,152 m³/s, respectively. Flood risk remains elevated but below the local danger threshold amid heavy rainfall of 111.6 mm and high soil moisture of 80.0%.",
       "signal": {
-        "country": "Brenholt",
-        "severity": 0.71,
-        "anomaly_type": "elevated flood risk",
-        "trend_vector": "river flow easing after a recent rise",
-        "confidence": 0.97,
+        "country": "India",
+        "severity": 0.65,
+        "anomaly_type": "heavy rainfall with elevated flow",
+        "trend_vector": "rising rainfall but river flow easing from peak",
+        "confidence": 0.98,
         "key_evidence": [
           "Discharge at 70.5% of local danger level",
-          "Heavy rainfall and 80.0% soil moisture"
+          "River level and discharge fell from 2026-07-02 peak"
         ]
       }
     },
     {
-      "country": "Veyra",
-      "narrative": "As of 2026-07-03, discharge is 3,327 m³/s, or 73.9% of Veyra’s local danger level, with no local alert active. Rainfall reached 118.9 mm and soil moisture rose to 81.6%, indicating elevated runoff potential. River level held at 7.89 m since the previous day, while discharge continued a modest rise.",
+      "country": "Bhutan",
+      "narrative": "As of 2026-07-03, Manas discharge was 3,327 m³/s, or 73.9% of Bhutan’s 4,500 m³/s local danger level, with no local alert active. Discharge has risen for four consecutive days, while daily rainfall reached 118.9 mm and soil moisture increased to 81.6%. Local flood risk is elevated but remains below Bhutan’s danger threshold.",
       "signal": {
-        "country": "Veyra",
+        "country": "Bhutan",
         "severity": 0.74,
-        "anomaly_type": "heavy rainfall and elevated flow",
+        "anomaly_type": "elevated flow after heavy rainfall",
         "trend_vector": "rainfall, soil moisture, and discharge rising",
-        "confidence": 0.98,
+        "confidence": 0.97,
         "key_evidence": [
-          "Discharge at 73.9% of local danger level",
-          "Rainfall 118.9 mm and soil moisture 81.6%"
+          "Discharge at 3327 m3/s, 73.9% of local danger",
+          "Rainfall reached 118.9 mm and soil moisture 81.6%"
         ]
       }
     },
     {
-      "country": "Ostmark",
-      "narrative": "As of 2026-07-03, discharge reached 4,312 m³/s, or 71.9% of Ostmark’s 6,000 m³/s local danger level; no local alert is active. River level rose to 7.50 m as daily rainfall increased to 103.2 mm and soil moisture reached 82.1%. Conditions show a sustained upward trend and elevated local flood risk, though discharge remains below the local danger threshold.",
+      "country": "Myanmar",
+      "narrative": "As of 2026-07-03, discharge was 4,312 m³/s, or 71.9% of Myanmar’s local danger level, with no local alert active. River level rose from 5.55 m to 7.50 m over seven days, while discharge increased steadily from 2,586 m³/s. Local flood risk is elevated and rising due to 103.2 mm of daily rainfall and soil moisture reaching 82.1%, but conditions remain below Myanmar’s danger threshold.",
       "signal": {
-        "country": "Ostmark",
+        "country": "Myanmar",
         "severity": 0.72,
-        "anomaly_type": "heavy rainfall and rising river flow",
-        "trend_vector": "rainfall, soil moisture, river level, and discharge rising",
-        "confidence": 0.98,
+        "anomaly_type": "elevated rising flow",
+        "trend_vector": "river level and discharge rising steadily",
+        "confidence": 0.97,
         "key_evidence": [
-          "Discharge is 4312 m3/s, 71.9% of the local danger level",
-          "Rainfall reached 103.2 mm and river level rose to 7.50 m"
+          "Discharge at 71.9% of local danger level",
+          "Heavy rainfall and soil moisture increased"
         ]
       }
     }
   ],
   "coordinator": {
-    "narrative": "Calderune should issue a flood warning for 2026-07-04, when the complete combined inflow is projected at exactly 44475 m3/s, above the 44,000 m3/s threshold and providing about one day of lead time. No single nation could identify this regional threat because each assessed only its own river, all remained below local danger levels with no local alerts, and the flood risk emerges only when the five rivers converge. On the warning date, the largest contribution is from Brenholt (23244 m3/s), followed by Torvia (6940 m3/s), Kaldor (6709 m3/s), Ostmark (4312 m3/s), and Veyra (3270 m3/s). The 2026-07-05 projection is 38510 m3/s, but it is only a lower bound because Ostmark is not yet reporting for that arrival date; later dates are also incomplete and cannot be treated as safe.",
-    "most_impacted": "Calderune",
-    "recommendation": "Calderune should immediately activate its flood-warning protocol for July 4, coordinate protective actions and evacuation readiness in low-lying delta communities, and request updated arrival-date projections from all five upstream nations."
+    "narrative": "Bangladesh needs a flood warning for 2026-07-04, when combined projected inflow is 44,475 m3/s, above the 44,000 m3/s flood threshold, providing about one day of lead time from today. India contributes most on the warning date at 23,244 m3/s, followed by Nepal 6,940 m3/s, China 6,709 m3/s, Myanmar 4,312 m3/s, and Bhutan 3,270 m3/s. No single nation could identify this threat because each observed flows below its own local danger level and issued no local alert; the risk appears only when all five inflows converge in Bangladesh. For 2026-07-05, the reported combined inflow is 38,510 m3/s, but this is a lower bound because only four nations report, while the 8,311 m3/s on July 6 and 8,557 m3/s on July 7 are also incomplete lower bounds.",
+    "most_impacted": "Bangladesh",
+    "recommendation": "Immediately activate a coordinated July 4 flood-readiness operation—issue public warnings, pre-position evacuation and relief resources in exposed districts, and require rapid upstream updates to clarify the incomplete July 5–7 outlook."
   }
 }

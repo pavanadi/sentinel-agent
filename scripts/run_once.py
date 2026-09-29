@@ -5,7 +5,7 @@
 runs/run-<id>.json.
 
 Usage (from the repo root, after `uv run flwr login supergrid`):
-    uv run python scripts/run_once.py "Brief me on river conditions for the Calderune delta."
+    uv run python scripts/run_once.py "Brief me on river conditions for Bangladesh."
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def main() -> None:
-    prompt = " ".join(sys.argv[1:]) or "Brief me on river conditions for the Calderune delta."
+    prompt = " ".join(sys.argv[1:]) or "Brief me on river conditions for Bangladesh."
     connection = read_superlink_connection(os.environ.get("FLWR_CHAT_SUPERLINK", "supergrid"))
     client = init_http_client_from_connection(connection)
     local_agent = build_local_agent(REPO_ROOT)

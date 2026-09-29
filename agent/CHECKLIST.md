@@ -66,11 +66,11 @@ At the prompt:
 
 ```text
 /load .
-Brief me on river conditions for the Calderune delta.
+Brief me on river conditions for Bangladesh.
 ```
 
-Checkpoint: you should see 6 distinct streamed sections (Kaldor, Torvia,
-Brenholt, Veyra, Ostmark, then the coordinator), each with its bolded header.
+Checkpoint: you should see 6 distinct streamed sections (China, Nepal,
+India, Bhutan, Myanmar, then the coordinator), each with its bolded header.
 
 ## 6. Validate JSON parsing
 
@@ -82,7 +82,7 @@ $ uv run flwr log <run-id> local-agent --show
 ```
 
 This surfaces `agent_app.py`'s `print()` output directly:
-- `[Kaldor] {...}` ... `[Ostmark] {...}`, then `[combined] [...]` — the parsed signal
+- `[China] {...}` ... `[Myanmar] {...}`, then `[combined] [...]` — the parsed signal
   dicts. Confirm all five parsed cleanly (no `"anomaly_type": "unparsed"`
   fallback) and the values make sense (severity/confidence in [0,1], sensible
   trend_vector text).

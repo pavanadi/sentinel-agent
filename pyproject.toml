@@ -14,7 +14,7 @@ dependencies = ["flwr>=1.39.0,<2.0", "openai>=2.16.0,<3.0.0"]
 packages = ["agent"]
 
 [tool.flwr.app]
-publisher = "REPLACE_WITH_YOUR_FLOWER_USERNAME"
+publisher = "pavanadi"
 display-name = "Sentinel: Federated Cyclone Early Warning"
 fab-format-version = 1
 flwr-version-target = "1.39.0"

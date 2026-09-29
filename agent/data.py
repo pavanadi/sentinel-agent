@@ -7,6 +7,12 @@ that boundary is the point of the demo.
 
 NATION_ORDER = ["Doria", "Kessa", "Averlyn"]
 
+# Public knowledge (on any map), so the coordinator may see it. Not sensor data.
+REGION_GEOGRAPHY = (
+    "Doria, Kessa and Averlyn lie in that order from east to west along one "
+    "continuous coastline. Kessa borders both Doria and Averlyn."
+)
+
 # Storm is currently over Doria (moving west, toward Kessa then Averlyn).
 LOCAL_SENSOR_DATA = {
     "Doria": {

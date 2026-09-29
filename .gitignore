@@ -7,3 +7,4 @@ build/
 *.fab
 .DS_Store
 .env
+runs/

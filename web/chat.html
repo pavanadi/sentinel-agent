@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sentinel Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="chat-page">
+  <header class="chat-header">
+    <div>
+      <strong>Sentinel Assistant</strong>
+      <span>Not connected -- static preview</span>
+    </div>
+    <button class="chat-close" id="chat-close" type="button" aria-label="Close chat">&times;</button>
+  </header>
+
+  <ol class="chat-messages" id="chat-messages">
+    <li class="msg bot">Hi, I'm the Sentinel assistant. Ask me about the current warning.</li>
+  </ol>
+
+  <form class="chat-input" id="chat-form">
+    <input id="chat-text" type="text" placeholder="Type a message..." autocomplete="off" aria-label="Message" />
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    const list = document.getElementById("chat-messages");
+    const input = document.getElementById("chat-text");
+    document.getElementById("chat-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      const li = document.createElement("li");
+      li.className = "msg user";
+      li.textContent = text;
+      list.appendChild(li);
+      input.value = "";
+      list.scrollTop = list.scrollHeight;
+      // ponytail: no reply yet, send `text` to the Flower agent here and append a .msg.bot
+    });
+
+    // Only when embedded in index.html's popup (same origin, so the parent DOM is reachable).
+    const popup = window.frameElement && window.frameElement.closest(".chat-popup");
+    if (popup) {
+      const closePopup = () => {
+        if (!popup.open || popup.classList.contains("closing")) return;
+        popup.classList.add("closing");
+        window.frameElement.addEventListener("animationend", () => {
+          popup.open = false;
+          popup.classList.remove("closing");
+        }, { once: true });
+      };
+      document.getElementById("chat-close").addEventListener("click", closePopup);
+      popup.querySelector("summary").addEventListener("click", (e) => {
+        if (popup.open) { e.preventDefault(); closePopup(); }
+      });
+      // Clicks inside the iframe never reach the parent document, so any click here is outside the chat.
+      window.parent.document.addEventListener("click", (e) => {
+        if (!popup.contains(e.target)) closePopup();
+      });
+    } else {
+      document.getElementById("chat-close").hidden = true;
+    }
+  </script>
+</body>
+</html>

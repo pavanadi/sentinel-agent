@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "sentinel-agent"
 version = "0.1.0"
-description = "Federated cross-border cyclone early warning: nation-local agents share only anonymized risk signals, never raw sensor data, and a coordinator agent infers the storm's impact from the combination alone."
+description = "Federated flood early warning: five upstream countries share only projected river inflow, never raw gauge data, so a coordinator can warn Bangladesh. Synthetic data."
 license = { file = "LICENSE" }
 requires-python = ">=3.11,<4.0"
 dependencies = ["flwr>=1.39.0,<2.0", "openai>=2.16.0,<3.0.0"]

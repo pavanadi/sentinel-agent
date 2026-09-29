@@ -3,53 +3,56 @@
   "nations": [
     {
       "country": "Doria",
-      "narrative": "Landfall occurred near the capital four hours ago. Pressure has begun rising and winds easing as the system moves offshore to the west. Rainfall totals remain high but are trending down from their peak. Coastal damage assessments are underway; the immediate danger here is receding.",
+      "narrative": "Doria remains at severe risk following cyclone landfall near the capital four hours ago, with current winds of 145 km/h and 190 mm of 24-hour rainfall. Conditions are beginning to ease: pressure has risen from 978 to 982 hPa, while winds and rainfall have declined from their T-6h peaks. The system is moving offshore to the west, but damaging winds, flooding, and saturated-ground impacts remain significant.",
       "signal": {
         "country": "Doria",
-        "severity": 0.55,
-        "anomaly_type": "post-landfall weakening system",
-        "trend_vector": "pressure rising, wind easing, moving west",
-        "confidence": 0.82,
+        "severity": 0.9,
+        "anomaly_type": "severe post-landfall cyclone",
+        "trend_vector": "pressure rising as winds and rainfall ease",
+        "storm_motion": "offshore to the west",
+        "confidence": 0.98,
         "key_evidence": [
-          "Pressure rose from 978 to 982 hPa over 6 hours",
-          "Wind speed eased from 155 to 145 km/h"
+          "Current winds 145 km/h",
+          "Landfall near capital four hours ago"
         ]
       }
     },
     {
       "country": "Kessa",
-      "narrative": "No landfall yet, but pressure has fallen steadily and wind speed has more than doubled over the last twelve hours. Coastal fishing fleets have been advised to return to harbor. Conditions are consistent with an approaching system rather than a departing one.",
+      "narrative": "Kessa’s coastal conditions are deteriorating rapidly, with pressure falling from 1006 to 994 hPa and winds rising from 35 to 80 km/h over 12 hours. Rainfall accumulation has increased from 5 to 45 mm per 24 hours, while sea-surface temperatures remain warm at 28.6°C, indicating a strengthening tropical system. No landfall has occurred, but coastal risk is high, and fishing fleets have been advised to return to harbor.",
       "signal": {
         "country": "Kessa",
-        "severity": 0.68,
-        "anomaly_type": "intensifying approach",
-        "trend_vector": "pressure falling, wind rising sharply",
-        "confidence": 0.79,
+        "severity": 0.82,
+        "anomaly_type": "strengthening tropical cyclone conditions",
+        "trend_vector": "pressure falling as winds and rainfall rise",
+        "storm_motion": "not observed",
+        "confidence": 0.95,
         "key_evidence": [
-          "Pressure fell from 1006 to 994 hPa over 12 hours",
-          "Wind speed rose from 35 to 80 km/h over the same window"
+          "Pressure fell 12 hPa in 12 hours",
+          "Winds rose to 80 km/h and rainfall to 45 mm"
         ]
       }
     },
     {
       "country": "Averlyn",
-      "narrative": "Skies are clear and seas are calm. The one unusual reading is sea-surface temperature, which is well above seasonal average and has been rising for three consecutive readings. No other indicators are currently elevated.",
+      "narrative": "Averlyn’s observations do not currently show a tropical cyclone or its motion. Sea-surface temperature has risen from 30.1°C to 31.2°C over 12 hours, while pressure has fallen slightly and winds have increased from 18 to 22 km/h. Current conditions remain clear and calm, with no recorded rainfall, but the unusually warm and rising sea temperature warrants close monitoring.",
       "signal": {
         "country": "Averlyn",
-        "severity": 0.22,
-        "anomaly_type": "anomalous sea-surface warming",
-        "trend_vector": "sea-surface temperature rising, all else calm",
-        "confidence": 0.65,
+        "severity": 0.38,
+        "anomaly_type": "rapidly warming sea surface",
+        "trend_vector": "temperature and winds rising as pressure slowly falls",
+        "storm_motion": "not observed",
+        "confidence": 0.91,
         "key_evidence": [
-          "Sea-surface temperature rose from 30.1 to 31.2 C over 12 hours",
-          "No pressure or wind anomaly detected locally"
+          "Sea temperature rose from 30.1°C to 31.2°C in 12 hours",
+          "Pressure eased to 1010 hPa while winds increased to 22 km/h"
         ]
       }
     }
   ],
   "coordinator": {
-    "narrative": "Doria's own data suggests the danger there is receding, and Kessa's data alone suggests a moderate approaching storm. Neither nation's own signal points to Averlyn as the greatest concern. But combined, the pattern is clear: the system is moving west along the same track as Doria-to-Kessa, and Averlyn sits directly ahead of it over water that is anomalously warm and still warming -- the exact condition that lets a weakening system re-intensify. No single nation's own signal shows this; it only emerges from comparing all three.",
+    "narrative": "The cyclone appears to be tracking west from post-landfall Doria toward Kessa and then Averlyn, with Doria easing as Kessa’s pressure falls and winds and rain intensify. Farther west, Averlyn’s exceptionally warm sea surface and slowly falling pressure could support renewed strengthening. Averlyn is therefore most likely to face the hardest eventual impact, despite its currently lower severity, although Kessa faces the most immediate danger. Together, the signals reveal a westward-moving, potentially re-intensifying system—recovery in Doria, escalation in Kessa, and favorable cyclone conditions developing in Averlyn.",
     "most_impacted": "Averlyn",
-    "recommendation": "Averlyn should activate coastal preparedness now, not wait for local conditions to change. Kessa should share its next sensor reading with Averlyn as soon as it's available, since Kessa's trend is the earliest confirmation of the storm's continued westward track."
+    "recommendation": "The three governments should activate one coordinated westward warning protocol now: Doria relay timing and impact lessons, while Kessa and Averlyn jointly escalate coastal warnings, evacuations, and emergency staging."
   }
 }

@@ -2,6 +2,8 @@ x-supernode: &sn
   image: flwr/supernode:1.39.0
   environment: &env
     FLWR_MODEL_API_KEY: ${FLWR_MODEL_API_KEY:?Set FLWR_MODEL_API_KEY before running docker compose}
+    # One download cache shared by all nodes, so dependencies download once, not five times.
+    UV_CACHE_DIR: /uv-cache
 
 services:
   supernode-nepal:
@@ -15,6 +17,7 @@ services:
       FLWR_FILESYSTEM_ALLOWED_DIRS: /data/supernode-nepal
     volumes:
       - ./keys:/keys:ro
+      - ./.uv-cache:/uv-cache
       - ./data/supernode-nepal:/data/supernode-nepal
 
   supernode-india:
@@ -28,6 +31,7 @@ services:
       FLWR_FILESYSTEM_ALLOWED_DIRS: /data/supernode-india
     volumes:
       - ./keys:/keys:ro
+      - ./.uv-cache:/uv-cache
       - ./data/supernode-india:/data/supernode-india
 
   supernode-china:
@@ -41,6 +45,7 @@ services:
       FLWR_FILESYSTEM_ALLOWED_DIRS: /data/supernode-china
     volumes:
       - ./keys:/keys:ro
+      - ./.uv-cache:/uv-cache
       - ./data/supernode-china:/data/supernode-china
 
   supernode-bhutan:
@@ -54,6 +59,7 @@ services:
       FLWR_FILESYSTEM_ALLOWED_DIRS: /data/supernode-bhutan
     volumes:
       - ./keys:/keys:ro
+      - ./.uv-cache:/uv-cache
       - ./data/supernode-bhutan:/data/supernode-bhutan
 
   supernode-myanmar:
@@ -67,4 +73,5 @@ services:
       FLWR_FILESYSTEM_ALLOWED_DIRS: /data/supernode-myanmar
     volumes:
       - ./keys:/keys:ro
+      - ./.uv-cache:/uv-cache
       - ./data/supernode-myanmar:/data/supernode-myanmar

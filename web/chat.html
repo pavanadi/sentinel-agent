@@ -45,6 +45,8 @@
     if (popup) {
       const closePopup = () => {
         if (!popup.open || popup.classList.contains("closing")) return;
+        // style.css disables all animations under reduced motion, so animationend would never fire.
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) { popup.open = false; return; }
         popup.classList.add("closing");
         window.frameElement.addEventListener("animationend", () => {
           popup.open = false;
